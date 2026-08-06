@@ -25,6 +25,8 @@ const auth = useAuthStore();
           <div class="pt-3 mt-3 border-t border-slate-200 text-[11px] font-medium text-slate-400 px-3">Settings</div>
           <RouterLink to="/settings/school-profile" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">School profile</RouterLink>
           <RouterLink to="/settings/academic-calendar" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Academic calendar</RouterLink>
+          <RouterLink to="/settings/classes-sections" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Classes &amp; sections</RouterLink>
+          <RouterLink to="/settings/subjects" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Subjects</RouterLink>
         </nav>
         <div class="p-3 border-t border-slate-200">
           <button class="w-full text-left px-3 py-2 rounded text-sm text-slate-600 hover:bg-slate-100" @click="auth.logout(); $router.push('/sign-in')">Sign out</button>
