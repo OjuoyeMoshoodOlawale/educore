@@ -22,11 +22,14 @@ const auth = useAuthStore();
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
           <RouterLink to="/" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Dashboard</RouterLink>
           <RouterLink to="/staff" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Staff</RouterLink>
+          <RouterLink to="/staff/allocation" class="flex items-center gap-2.5 pl-9 pr-3 py-1.5 rounded text-[13px] text-slate-500 hover:bg-slate-100">Allocation</RouterLink>
           <div class="pt-3 mt-3 border-t border-slate-200 text-[11px] font-medium text-slate-400 px-3">Settings</div>
           <RouterLink to="/settings/school-profile" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">School profile</RouterLink>
           <RouterLink to="/settings/academic-calendar" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Academic calendar</RouterLink>
           <RouterLink to="/settings/classes-sections" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Classes &amp; sections</RouterLink>
           <RouterLink to="/settings/subjects" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Subjects</RouterLink>
+          <RouterLink to="/settings/grading-scale" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Grading scale</RouterLink>
+          <RouterLink to="/settings/number-sequences" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Number sequences</RouterLink>
         </nav>
         <div class="p-3 border-t border-slate-200">
           <button class="w-full text-left px-3 py-2 rounded text-sm text-slate-600 hover:bg-slate-100" @click="auth.logout(); $router.push('/sign-in')">Sign out</button>
