@@ -29,15 +29,16 @@ Sign in with `admin@educore.dev` / `changeme123`.
 ## What's real right now
 
 - **Auth** — JWT access token (15 min) + httpOnly refresh cookie (30 days), auto-refresh on 401, the non-enumerable "incorrect email or password" message from `ux-design.md` §2.
-- **Settings** — school profile, academic calendar (collapsible sessions, lazy-loaded terms, auto-creates 3 terms per session, single "current term" pivot — the SchoolFees Manager pattern from `schoolfees-manager-alignment.md` §4).
-- **Staff** — list + modal-based add, with the staff number drawn live from the configured number sequence (token-format engine in `server/src/helpers/numberSequence.js`, matching `schoolfees-manager-alignment.md` §5).
-- **Number sequences** — the token-format engine and presets are built server-side; the settings *screen* for editing formats isn't wired yet (API is ready: `GET/PUT /api/schools/number-sequences`).
-- **Multiple teachers per class-subject** — the schema and API support it (`POST /api/staff/allocation/subject-teacher` is a plain insert, not an upsert-replace); the allocation UI screen itself isn't built yet.
-- **Base component kit** — `Modal`, `Confirm`, `Toast`/`useToast`, `Field`, `DataTable`, `StatusBadge`, `PageHeader`, `Spinner`, `CurrencyInput`, `StarRating` — all in `client/src/components/base/`, one file each, no framework beyond Vue + Tailwind.
+- **Settings — all screens live:** school profile, academic calendar (collapsible sessions, lazy-loaded terms, auto-creates 3 terms per session, single "current term" pivot), classes & sections (real drag-to-reorder, native HTML5 DnD, persisted on drop), subjects (inline-editable max scores), grading scale (star-rating legend), number sequences (token-format builder with presets + live preview — the SchoolFees Manager pattern from `schoolfees-manager-alignment.md` §5).
+- **Staff** — list + modal-based add, staff number drawn live from the configured number sequence.
+- **Allocation** — class-teacher assignment, and subject-teacher assignment with **multiple teachers per class-subject verified working** (two different teachers assigned to the same Mathematics/JSS 1/term combination, both show up independently — not an upsert-replace).
+- **Base component kit** — `Modal`, `Confirm`, `Toast`/`useToast`, `Field`, `DataTable`, `StatusBadge`, `PageHeader`, `Spinner`, `CurrencyInput`, `StarRating` — all in `client/src/components/base/`, one file each.
 
-## What's scaffolded but not built yet
+Phase 1 (`milestones.md`) is complete: every screen has both a working API route and a working Vue page, tested end to end over curl and a clean `vite build`.
 
-Classes/sections/subjects/grading-scale settings screens (API routes exist in `schools.routes.js`, no Vue pages yet), and everything from Phase 2 onward (fees, results, promotion, accounting) per `milestones.md` and `addendum-v4.md`.
+## What's next
+
+Everything from Phase 2 onward (fees, results, promotion, accounting) per `milestones.md` and `addendum-v4.md`. The "current term" used by the allocation screen is hardcoded (`CURRENT_TERM_ID = 2` in `Allocation.vue`) since there's no global current-term picker in the UI yet — worth wiring once a second module needs it too, rather than each new screen hardcoding its own.
 
 ## Folder structure
 
