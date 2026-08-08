@@ -44,7 +44,7 @@ npm run dev                 # http://localhost:5173
 - **Base component kit** — `Modal`, `Confirm`, `Toast`/`useToast`, `Field`, `DataTable`, `StatusBadge`, `PageHeader`, `Spinner`, `CurrencyInput`, `StarRating` — all in `client/src/components/base/`, one file each.
 - **Grading scale is fully editable** — grade boundaries and the psychomotor/affective star-rating legend are school-custom, with real add/edit/delete, not just a fixed seeded default.
 - **Students** — list, add (with one-to-many guardians, unlike the legacy single-contact model), profile page with the real fee ledger.
-- **Fees** — fee items, per-class fee structure (with copy-from-term), adjustments, payment accounts, payment recording with auto-generated receipt numbers, carry-forward balance calculation (verified against real numbers: opening balance + current charges − payments), a defaulters report endpoint.
+- **Fees — all core screens live too:** fee items, per-class fee structure UI (`fees/structure.html`-equivalent, with copy-from-term), payment accounts settings (cash/bank, e.g. "Zenith Bank — 2219098987"), a defaulters report, adjustments and payment recording built into the student profile ledger view. Carry-forward balance calculation verified against real numbers (opening balance + current charges − payments) on real MySQL data, with auto-generated receipt numbers from the same token-sequence engine as admission/staff numbers.
 - **Mobile responsiveness** — the app shell's sidebar is a slide-over drawer below the `md` breakpoint (hamburger toggle, backdrop, auto-closes on navigation); tables that could overflow scroll horizontally instead of breaking layout.
 - **Runs on MySQL or SQLite interchangeably** — same migrations, verified against both.
 
@@ -61,7 +61,7 @@ These are exactly the class of bug that "works fine in dev, breaks in production
 
 ## What's next
 
-Fee reports/exports UI (the defaulters API exists, no screen yet), notification log, replacing the remaining plain-number class/term inputs with real pickers, then results/report cards, promotion/graduation, and accounting per `milestones.md` and `addendum-v4.md`.
+Notification log UI, replacing the remaining plain-number class/term inputs with real pickers, then results/report cards, promotion/graduation, and accounting per `milestones.md` and `addendum-v4.md`.
 
 ## Folder structure
 
