@@ -145,13 +145,55 @@ router.put('/subjects/:id', requireRole('admin', 'developer'), validate(subjectS
   res.json({ success: true, data: await db('subjects').where({ id: req.params.id }).first() });
 });
 
-// ---- Grading scale ----
+// ---- Grading scale (school-custom, fully editable) ----
 router.get('/grading-scale', async (req, res) => {
   const [gradeBoundaries, ratingKeys] = await Promise.all([
     db('grade_boundaries').where({ school_id: req.user.school_id }).orderBy('min_score', 'desc'),
     db('rating_keys').where({ school_id: req.user.school_id }).orderBy('key_value', 'desc')
   ]);
   res.json({ success: true, data: { gradeBoundaries, ratingKeys } });
+});
+
+const gradeBoundarySchema = z.object({
+  min_score: z.number().int().min(0),
+  max_score: z.number().int().max(100),
+  grade_key: z.string().min(1, 'Grade key is required (e.g. "A")'),
+  description: z.string().optional()
+});
+
+router.post('/grading-scale/grade-boundaries', requireRole('admin', 'developer'), validate(gradeBoundarySchema), async (req, res) => {
+  const [id] = await db('grade_boundaries').insert({ school_id: req.user.school_id, ...req.validated });
+  res.status(201).json({ success: true, data: await db('grade_boundaries').where({ id }).first() });
+});
+
+router.put('/grading-scale/grade-boundaries/:id', requireRole('admin', 'developer'), validate(gradeBoundarySchema), async (req, res) => {
+  await db('grade_boundaries').where({ id: req.params.id }).update({ ...req.validated, updated_at: db.fn.now() });
+  res.json({ success: true, data: await db('grade_boundaries').where({ id: req.params.id }).first() });
+});
+
+router.delete('/grading-scale/grade-boundaries/:id', requireRole('admin', 'developer'), async (req, res) => {
+  await db('grade_boundaries').where({ id: req.params.id }).del();
+  res.json({ success: true, data: null });
+});
+
+const ratingKeySchema = z.object({
+  key_value: z.number().int().min(1).max(5),
+  description: z.string().min(1, 'Description is required')
+});
+
+router.post('/grading-scale/rating-keys', requireRole('admin', 'developer'), validate(ratingKeySchema), async (req, res) => {
+  const [id] = await db('rating_keys').insert({ school_id: req.user.school_id, ...req.validated });
+  res.status(201).json({ success: true, data: await db('rating_keys').where({ id }).first() });
+});
+
+router.put('/grading-scale/rating-keys/:id', requireRole('admin', 'developer'), validate(ratingKeySchema), async (req, res) => {
+  await db('rating_keys').where({ id: req.params.id }).update({ ...req.validated, updated_at: db.fn.now() });
+  res.json({ success: true, data: await db('rating_keys').where({ id: req.params.id }).first() });
+});
+
+router.delete('/grading-scale/rating-keys/:id', requireRole('admin', 'developer'), async (req, res) => {
+  await db('rating_keys').where({ id: req.params.id }).del();
+  res.json({ success: true, data: null });
 });
 
 // ---- Number sequences ----

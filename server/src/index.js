@@ -5,6 +5,8 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './modules/auth/auth.routes.js';
 import schoolsRoutes from './modules/schools/schools.routes.js';
 import staffRoutes from './modules/staff/staff.routes.js';
+import studentsRoutes from './modules/students/students.routes.js';
+import feesRoutes from './modules/fees/fees.routes.js';
 
 const app = express();
 
@@ -17,6 +19,8 @@ app.get('/api/health', (req, res) => res.json({ success: true, data: { status: '
 app.use('/api/auth', authRoutes);
 app.use('/api/schools', schoolsRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/students', studentsRoutes);
+app.use('/api/fees', feesRoutes);
 
 // Every uncaught error becomes a generic 500 to the client — real detail goes to the server log only.
 app.use((err, req, res, next) => {

@@ -56,7 +56,7 @@ export function up(knex) {
       t.integer('subject_id').unsigned().notNullable().references('id').inTable('subjects').onDelete('CASCADE');
       t.integer('staff_id').unsigned().notNullable().references('id').inTable('staff').onDelete('CASCADE');
       // Deliberately no unique(term,class,subject) — multiple teachers per class-subject is a supported case.
-      t.unique(['term_id', 'class_id', 'subject_id', 'staff_id']);
+      t.unique(['term_id', 'class_id', 'subject_id', 'staff_id'], { indexName: 'sta_term_class_subject_staff_uq' });
       t.timestamps(true, true);
     });
 }

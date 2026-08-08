@@ -5,7 +5,7 @@ const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
 export function signAccessToken(user) {
   return jwt.sign(
-    { sub: user.id, school_id: user.school_id, role: user.role },
+    { sub: user.id, school_id: user.school_id, role: user.role, staff_id: user.staff_id || null },
     ACCESS_SECRET,
     { expiresIn: '15m' }
   );
@@ -23,7 +23,7 @@ export function requireAuth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, ACCESS_SECRET);
-    req.user = { id: payload.sub, school_id: payload.school_id, role: payload.role };
+    req.user = { id: payload.sub, school_id: payload.school_id, role: payload.role, staff_id: payload.staff_id };
     next();
   } catch {
     return res.status(401).json({ success: false, message: 'Session expired, please sign in again' });
