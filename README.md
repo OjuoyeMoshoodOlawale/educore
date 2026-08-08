@@ -48,7 +48,7 @@ npm run dev                 # http://localhost:5173
 - **Mobile responsiveness** — the app shell's sidebar is a slide-over drawer below the `md` breakpoint (hamburger toggle, backdrop, auto-closes on navigation); tables that could overflow scroll horizontally instead of breaking layout.
 - **Runs on MySQL or SQLite interchangeably** — same migrations, verified against both.
 
-Phase 1 (`milestones.md`) is complete. Phase 2's core (students + fees) is built and verified end to end against real MySQL, though the client-side "current class/term" pickers on a couple of forms are still plain number inputs rather than real dropdowns (see "What's next").
+Phase 1 (`milestones.md`) is complete. Phase 2 (students + fees) is complete and verified end to end against real MySQL, including the notification log with honest failed/resend behavior (no SMS/email provider is wired up yet — that's Phase 5).
 
 ## Real bugs found and fixed while building this
 
@@ -61,7 +61,7 @@ These are exactly the class of bug that "works fine in dev, breaks in production
 
 ## What's next
 
-Notification log UI, replacing the remaining plain-number class/term inputs with real pickers, then results/report cards, promotion/graduation, and accounting per `milestones.md` and `addendum-v4.md`.
+Results/report cards (Phase 3): score entry, psychomotor/affective ratings (star-rating component already built, not yet wired to a results screen), attendance/comments with auto-suggested drafts, the report card + broadsheet, per-class publish. Then promotion/graduation and accounting per `milestones.md` and `addendum-v4.md`.
 
 ## Folder structure
 
