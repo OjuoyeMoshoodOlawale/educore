@@ -37,7 +37,7 @@ npm run dev                 # http://localhost:5173
 
 ## What's real right now
 
-- **Auth** — JWT access token (15 min) + httpOnly refresh cookie (30 days), auto-refresh on 401, the non-enumerable "incorrect email or password" message from `ux-design.md` §2.
+- **Auth** — JWT access token (15 min) + httpOnly refresh cookie (30 days), auto-refresh on 401, the non-enumerable "incorrect email or password" message from `ux-design.md` §2, rate-limited (10 attempts / 15 min, same limiter applied to the public result-check endpoint per `engineering-design.md` §3).
 - **Settings — all screens live:** school profile, academic calendar (collapsible sessions, lazy-loaded terms, auto-creates 3 terms per session, single "current term" pivot), classes & sections (real drag-to-reorder, native HTML5 DnD, persisted on drop), subjects (inline-editable max scores), grading scale (star-rating legend), number sequences (token-format builder with presets + live preview — the SchoolFees Manager pattern from `schoolfees-manager-alignment.md` §5).
 - **Staff** — list + modal-based add, staff number drawn live from the configured number sequence.
 - **Allocation** — class-teacher assignment, and subject-teacher assignment with **multiple teachers per class-subject verified working** (two different teachers assigned to the same Mathematics/JSS 1/term combination, both show up independently — not an upsert-replace).
@@ -48,7 +48,7 @@ npm run dev                 # http://localhost:5173
 - **Mobile responsiveness** — the app shell's sidebar is a slide-over drawer below the `md` breakpoint (hamburger toggle, backdrop, auto-closes on navigation); tables that could overflow scroll horizontally instead of breaking layout.
 - **Runs on MySQL or SQLite interchangeably** — same migrations, verified against both.
 
-Phase 1 (`milestones.md`) is complete. Phase 2 (students + fees) is complete and verified end to end against real MySQL, including the notification log with honest failed/resend behavior (no SMS/email provider is wired up yet — that's Phase 5). Phase 3 (results + report cards) is also complete: score entry with server-side max validation, star-rated psychomotor/affective, attendance/comments with auto-suggested drafts, the report card and broadsheet sharing one ranking algorithm, and per-class publish.
+Phase 1 (`milestones.md`) is complete. Phase 2 (students + fees) is complete. Phase 3 (results + report cards) is complete. Phase 4's core (promotion, graduation, public result check) is also done — the logged-in parent/student portal (combining fees + results in one place) is the one piece of Phase 4 not yet built.
 
 ## Real bugs found and fixed while building this
 
@@ -61,7 +61,7 @@ These are exactly the class of bug that "works fine in dev, breaks in production
 
 ## What's next
 
-Promotion/graduation and the parent/student result-check portal (Phase 4), then notifications settings + recruitment (Phase 5), per `milestones.md` and `addendum-v4.md`.
+The logged-in parent/student portal (fees + published results together, finishing Phase 4), then notifications settings + recruitment (Phase 5), per `milestones.md` and `addendum-v4.md`.
 
 ## Folder structure
 
