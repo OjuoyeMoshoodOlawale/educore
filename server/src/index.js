@@ -9,6 +9,8 @@ import studentsRoutes from './modules/students/students.routes.js';
 import feesRoutes from './modules/fees/fees.routes.js';
 import notificationsRoutes from './modules/notifications/notifications.routes.js';
 import resultsRoutes from './modules/results/results.routes.js';
+import promotionRoutes from './modules/promotion/promotion.routes.js';
+import publicRoutes from './modules/public/public.routes.js';
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use('/api/students', studentsRoutes);
 app.use('/api/fees', feesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/results', resultsRoutes);
+app.use('/api/promotion', promotionRoutes);
+app.use('/api/public', publicRoutes);
 
 // Every uncaught error becomes a generic 500 to the client — real detail goes to the server log only.
 app.use((err, req, res, next) => {

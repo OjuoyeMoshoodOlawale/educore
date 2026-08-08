@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/auth';
 
 const routes = [
   { path: '/sign-in', name: 'sign-in', component: () => import('../views/auth/SignIn.vue') },
+  { path: '/result-check', name: 'result-check', component: () => import('../views/public/ResultCheck.vue') },
   { path: '/', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { requiresAuth: true } },
   { path: '/settings/school-profile', name: 'school-profile', component: () => import('../views/settings/SchoolProfile.vue'), meta: { requiresAuth: true } },
   { path: '/settings/academic-calendar', name: 'academic-calendar', component: () => import('../views/settings/AcademicCalendar.vue'), meta: { requiresAuth: true } },
@@ -24,7 +25,9 @@ const routes = [
   { path: '/results/remarks', name: 'remarks', component: () => import('../views/results/Remarks.vue'), meta: { requiresAuth: true } },
   { path: '/results/report-card/:studentId/:termId', name: 'report-card', component: () => import('../views/results/ReportCard.vue'), meta: { requiresAuth: true } },
   { path: '/results/broadsheet', name: 'broadsheet', component: () => import('../views/results/Broadsheet.vue'), meta: { requiresAuth: true } },
-  { path: '/results/publish', name: 'publish', component: () => import('../views/results/Publish.vue'), meta: { requiresAuth: true } }
+  { path: '/results/publish', name: 'publish', component: () => import('../views/results/Publish.vue'), meta: { requiresAuth: true } },
+  { path: '/promotion', name: 'promotion', component: () => import('../views/promotion/Promotion.vue'), meta: { requiresAuth: true } },
+  { path: '/graduation', name: 'graduation', component: () => import('../views/promotion/Graduation.vue'), meta: { requiresAuth: true } }
 ];
 
 export const router = createRouter({ history: createWebHistory(), routes });

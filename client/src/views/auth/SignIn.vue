@@ -52,6 +52,15 @@ async function submit() {
         </button>
       </form>
       <p class="text-center text-[12px] text-slate-400 mt-5">admin@educore.dev / changeme123 (seeded)</p>
+
+      <div class="flex items-center gap-3 my-5">
+        <div class="flex-1 h-px bg-slate-200"></div>
+        <span class="text-[12px] text-slate-400">or</span>
+        <div class="flex-1 h-px bg-slate-200"></div>
+      </div>
+      <RouterLink to="/result-check" class="w-full h-[42px] flex items-center justify-center gap-2 border border-primary text-primary text-sm font-medium rounded-lg hover:bg-primary-50">
+        Check your child's result
+      </RouterLink>
     </div>
   </div>
 </template>

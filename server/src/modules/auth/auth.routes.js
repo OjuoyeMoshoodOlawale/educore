@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { db } from '../../config/db.js';
 import { validate } from '../../helpers/validate.js';
@@ -8,12 +9,20 @@ import { signAccessToken, signRefreshToken, requireAuth } from '../../middleware
 
 const router = Router();
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  message: { success: false, message: 'Too many attempts — please try again in a few minutes' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
   password: z.string().min(1, 'Enter your password')
 });
 
-router.post('/login', validate(loginSchema), async (req, res) => {
+router.post('/login', loginLimiter, validate(loginSchema), async (req, res) => {
   const { email, password } = req.validated;
   const user = await db('users').where({ email }).first();
 
