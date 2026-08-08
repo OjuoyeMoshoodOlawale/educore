@@ -1,6 +1,13 @@
 import bcrypt from 'bcryptjs';
 
 export async function seed(knex) {
+  await knex('term_class_publications').del();
+  await knex('trait_scores').del();
+  await knex('trait_definitions').del();
+  await knex('comment_templates').del();
+  await knex('student_term_remarks').del();
+  await knex('subject_scores').del();
+  await knex('notification_log').del();
   await knex('payments').del();
   await knex('payment_accounts').del();
   await knex('fee_adjustments').del();
@@ -74,6 +81,26 @@ export async function seed(knex) {
   await knex('payment_accounts').insert([
     { school_id: schoolId, type: 'cash', account_name: 'Cash' },
     { school_id: schoolId, type: 'bank', bank_name: 'Zenith Bank', account_number: '2219098987', account_name: 'Al-Minhaaj Model College' }
+  ]);
+
+  // Default trait lists, editable per school — same "auto-fill sensible defaults" principle as everywhere else.
+  await knex('trait_definitions').insert([
+    { school_id: schoolId, domain: 'psychomotor', description: 'Handwriting', display_order: 0 },
+    { school_id: schoolId, domain: 'psychomotor', description: 'Sports', display_order: 1 },
+    { school_id: schoolId, domain: 'psychomotor', description: 'Handling of tools', display_order: 2 },
+    { school_id: schoolId, domain: 'affective', description: 'Punctuality', display_order: 0 },
+    { school_id: schoolId, domain: 'affective', description: 'Honesty', display_order: 1 },
+    { school_id: schoolId, domain: 'affective', description: 'Neatness', display_order: 2 }
+  ]);
+
+  // Auto-suggested comment drafts — pre-filled, editable, never saved unreviewed (platform-addendum.md §4).
+  await knex('comment_templates').insert([
+    { school_id: schoolId, role: 'teacher', min_score: 70, max_score: 100, draft_text: 'Excellent performance this term, keep it up.' },
+    { school_id: schoolId, role: 'teacher', min_score: 50, max_score: 69, draft_text: 'A good result this term. There is still room to push further.' },
+    { school_id: schoolId, role: 'teacher', min_score: 0, max_score: 49, draft_text: 'Needs more effort in the coming term — please provide extra support at home.' },
+    { school_id: schoolId, role: 'principal', min_score: 70, max_score: 100, draft_text: 'A pleasure to have in school. Well done this term.' },
+    { school_id: schoolId, role: 'principal', min_score: 50, max_score: 69, draft_text: 'Satisfactory progress. Keep encouraging consistent effort.' },
+    { school_id: schoolId, role: 'principal', min_score: 0, max_score: 49, draft_text: 'This result needs urgent attention. Let us work together to support improvement.' }
   ]);
 
   const passwordHash = await bcrypt.hash('changeme123', 10);

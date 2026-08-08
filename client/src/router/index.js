@@ -18,7 +18,13 @@ const routes = [
   { path: '/fees/structure', name: 'fee-structure', component: () => import('../views/fees/FeeStructure.vue'), meta: { requiresAuth: true } },
   { path: '/fees/payment-accounts', name: 'payment-accounts', component: () => import('../views/fees/PaymentAccounts.vue'), meta: { requiresAuth: true } },
   { path: '/fees/reports', name: 'fee-reports', component: () => import('../views/fees/Reports.vue'), meta: { requiresAuth: true } },
-  { path: '/notifications', name: 'notification-log', component: () => import('../views/notifications/NotificationLog.vue'), meta: { requiresAuth: true } }
+  { path: '/notifications', name: 'notification-log', component: () => import('../views/notifications/NotificationLog.vue'), meta: { requiresAuth: true } },
+  { path: '/results/score-entry', name: 'score-entry', component: () => import('../views/results/ScoreEntry.vue'), meta: { requiresAuth: true } },
+  { path: '/results/psychomotor-affective', name: 'psychomotor-affective', component: () => import('../views/results/PsychomotorAffective.vue'), meta: { requiresAuth: true } },
+  { path: '/results/remarks', name: 'remarks', component: () => import('../views/results/Remarks.vue'), meta: { requiresAuth: true } },
+  { path: '/results/report-card/:studentId/:termId', name: 'report-card', component: () => import('../views/results/ReportCard.vue'), meta: { requiresAuth: true } },
+  { path: '/results/broadsheet', name: 'broadsheet', component: () => import('../views/results/Broadsheet.vue'), meta: { requiresAuth: true } },
+  { path: '/results/publish', name: 'publish', component: () => import('../views/results/Publish.vue'), meta: { requiresAuth: true } }
 ];
 
 export const router = createRouter({ history: createWebHistory(), routes });
