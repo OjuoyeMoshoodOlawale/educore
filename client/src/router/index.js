@@ -14,7 +14,10 @@ const routes = [
   { path: '/staff/allocation', name: 'allocation', component: () => import('../views/staff/Allocation.vue'), meta: { requiresAuth: true } },
   { path: '/students', name: 'student-list', component: () => import('../views/students/StudentList.vue'), meta: { requiresAuth: true } },
   { path: '/students/new', name: 'student-form', component: () => import('../views/students/StudentForm.vue'), meta: { requiresAuth: true } },
-  { path: '/students/:id', name: 'student-profile', component: () => import('../views/students/StudentProfile.vue'), meta: { requiresAuth: true } }
+  { path: '/students/:id', name: 'student-profile', component: () => import('../views/students/StudentProfile.vue'), meta: { requiresAuth: true } },
+  { path: '/fees/structure', name: 'fee-structure', component: () => import('../views/fees/FeeStructure.vue'), meta: { requiresAuth: true } },
+  { path: '/fees/payment-accounts', name: 'payment-accounts', component: () => import('../views/fees/PaymentAccounts.vue'), meta: { requiresAuth: true } },
+  { path: '/fees/reports', name: 'fee-reports', component: () => import('../views/fees/Reports.vue'), meta: { requiresAuth: true } }
 ];
 
 export const router = createRouter({ history: createWebHistory(), routes });
