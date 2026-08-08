@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '../../api/client';
 import PageHeader from '../../components/base/PageHeader.vue';
@@ -10,12 +10,28 @@ const router = useRouter();
 const toast = useToast();
 const errors = ref({});
 const saving = ref(false);
+const classes = ref([]);
+const terms = ref([]);
 
 const form = ref({
   first_name: '', last_name: '', other_name: '', sex: 'female', boarding_type: 'day',
   date_of_birth: '', address: '', occupation: '',
   class_id: null, term_id: null, intake_type: 'new',
   guardians: [{ name: '', relationship: 'mother', phone: '', email: '', is_primary: true }]
+});
+
+onMounted(async () => {
+  const classesRes = await api.get('/schools/classes');
+  classes.value = classesRes.data.data;
+  form.value.class_id = classes.value[0]?.id || null;
+
+  const sessions = await api.get('/schools/sessions');
+  const active = sessions.data.data.find((s) => s.is_active) || sessions.data.data[0];
+  if (active) {
+    const termsRes = await api.get(`/schools/sessions/${active.id}/terms`);
+    terms.value = termsRes.data.data;
+    form.value.term_id = terms.value.find((t) => t.is_current)?.id || terms.value[0]?.id || null;
+  }
 });
 
 function addGuardian() {
@@ -67,11 +83,15 @@ async function save() {
       </Field>
     </div>
     <div class="grid sm:grid-cols-3 gap-4">
-      <Field label="Class ID" hint="Temporary numeric input — a real class picker lands with the Settings integration pass" :error="errors.class_id">
-        <input v-model="form.class_id" type="number" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm" />
+      <Field label="Class" :error="errors.class_id">
+        <select v-model.number="form.class_id" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm">
+          <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
+        </select>
       </Field>
-      <Field label="Term ID" :error="errors.term_id">
-        <input v-model="form.term_id" type="number" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm" />
+      <Field label="Term" :error="errors.term_id">
+        <select v-model.number="form.term_id" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm">
+          <option v-for="t in terms" :key="t.id" :value="t.id">{{ t.name }}</option>
+        </select>
       </Field>
       <Field label="Intake">
         <select v-model="form.intake_type" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm"><option value="new">New</option><option value="returning">Returning</option></select>

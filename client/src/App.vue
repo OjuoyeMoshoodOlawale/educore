@@ -36,6 +36,7 @@ watch(() => route.path, () => { sidebarOpen.value = false; });
           <RouterLink to="/fees/structure" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Fee structure</RouterLink>
           <RouterLink to="/fees/payment-accounts" class="flex items-center gap-2.5 pl-9 pr-3 py-1.5 rounded text-[13px] text-slate-500 hover:bg-slate-100">Payment accounts</RouterLink>
           <RouterLink to="/fees/reports" class="flex items-center gap-2.5 pl-9 pr-3 py-1.5 rounded text-[13px] text-slate-500 hover:bg-slate-100">Defaulters</RouterLink>
+          <RouterLink to="/notifications" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Notification log</RouterLink>
           <RouterLink to="/staff" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Staff</RouterLink>
           <RouterLink to="/staff/allocation" class="flex items-center gap-2.5 pl-9 pr-3 py-1.5 rounded text-[13px] text-slate-500 hover:bg-slate-100">Allocation</RouterLink>
           <div class="pt-3 mt-3 border-t border-slate-200 text-[11px] font-medium text-slate-400 px-3">Settings</div>
