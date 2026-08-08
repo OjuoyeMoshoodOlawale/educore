@@ -24,7 +24,7 @@ cd server
 cp .env.example .env        # edit DB_CLIENT per the options above; replace the JWT secrets for anything beyond local dev
 npm install
 npx knex migrate:latest
-npx knex seed:run           # creates a demo school + one login per role, all password changeme123
+npx knex seed:run           # creates a full demo school — see "Demo data" below
 npm run dev                 # http://localhost:4000
 
 # Client (separate terminal)
@@ -34,6 +34,8 @@ npm run dev                 # http://localhost:5173
 ```
 
 **Seeded logins** (all `changeme123`): `admin@educore.dev`, `principal@educore.dev`, `classteacher@educore.dev`, `subjectteacher@educore.dev`, `bursar@educore.dev`, `developer@educore.dev`. Every role except `developer` has a real linked `staff` record, so actions they take (recording a payment, adding an adjustment) attribute correctly.
+
+**Demo data** (all in the one seeded school, Second term 2025/2026): 3 classes (JSS 1–3), 5 subjects, 8 staff (5 with the logins above, plus 3 unlinked teachers so allocation has a real pool — including Mathematics on JSS 2 deliberately assigned to *two* teachers, to exercise the multi-teacher-per-subject case), 8 students spread across the 3 classes with guardians, fee structures for every class, payments left intentionally mixed — paid up, partial, and untouched — so the defaulters report has something real to show, subject scores/psychomotor/affective ratings/attendance for JSS 2's three students (Chidinma Eze ranks 1st at 88.6%, Amina Yusuf 2nd at 82.4%, Tunde Okafor 3rd at 72% — verified via the actual ranking endpoint, not asserted), and JSS 2's second term is pre-published so the report card, broadsheet, and public result-check page all have something to show without any manual setup. Try the result checker with `ISS/2026/0145` (Amina).
 
 ## What's real right now
 
