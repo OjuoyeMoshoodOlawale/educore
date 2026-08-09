@@ -37,7 +37,8 @@ const groups = [
     { to: '/settings/subjects', label: 'Subjects' },
     { to: '/settings/grading-scale', label: 'Grading scale' },
     { to: '/settings/traits', label: 'Psychomotor & affective traits' },
-    { to: '/settings/number-sequences', label: 'Number sequences' }
+    { to: '/settings/number-sequences', label: 'Number sequences' },
+    { to: '/settings/notifications', label: 'Notifications' }
   ] }
 ];
 

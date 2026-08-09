@@ -13,13 +13,27 @@ function formatMoney(n) {
 }
 
 async function sendReminder(d) {
-  await api.post('/notifications/send', {
+  const result = await api.post('/notifications/send', {
     channel: 'sms',
     recipient: d.admission_no, // stand-in until guardian phone is joined in here too
     message: `Reminder: ${d.first_name} ${d.last_name} has an outstanding balance of ${formatMoney(d.balance)} this term.`,
     related_student_id: d.id
   });
-  toast.warning('Reminder logged — no SMS provider configured yet, see Notification log');
+  if (result.data.data.status === 'sent') toast.success('Reminder sent');
+  else toast.warning(`Reminder logged as failed (${result.data.data.provider_response}) — see Notification log`);
+}
+
+async function sendAllReminders() {
+  const recipients = defaulters.value.map((d) => ({
+    recipient: d.admission_no,
+    relatedStudentId: d.id
+  }));
+  const res = await api.post('/notifications/bulk', {
+    channel: 'sms',
+    recipients,
+    message: 'Reminder: you have an outstanding fee balance this term. Please contact the school office.'
+  });
+  toast.info(`${res.data.data.sent} sent, ${res.data.data.failed} failed — see Notification log`);
 }
 
 onMounted(async () => {
@@ -34,7 +48,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <PageHeader title="Defaulters" subtitle="Students with an outstanding balance this term." />
+  <PageHeader title="Defaulters" subtitle="Students with an outstanding balance this term.">
+    <template #actions>
+      <button v-if="defaulters?.length" class="h-9 px-3 text-[13px] font-medium rounded-lg border border-slate-300 text-slate-600" @click="sendAllReminders">Send reminder to all</button>
+    </template>
+  </PageHeader>
   <Spinner v-if="!defaulters" />
   <template v-else>
     <!-- Desktop table -->
