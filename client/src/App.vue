@@ -30,6 +30,9 @@ const groups = [
     { to: '/promotion', label: 'Promotion' },
     { to: '/graduation', label: 'Graduation' }
   ] },
+  { key: 'recruitment', label: 'Recruitment', prefix: '/recruitment', items: [
+    { to: '/recruitment', label: 'Job postings' }
+  ] },
   { key: 'settings', label: 'Settings', prefix: '/settings', items: [
     { to: '/settings/school-profile', label: 'School profile' },
     { to: '/settings/academic-calendar', label: 'Academic calendar' },

@@ -4,6 +4,9 @@ import { useAuthStore } from '../stores/auth';
 const routes = [
   { path: '/sign-in', name: 'sign-in', component: () => import('../views/auth/SignIn.vue') },
   { path: '/result-check', name: 'result-check', component: () => import('../views/public/ResultCheck.vue') },
+  { path: '/apply/:id', name: 'apply', component: () => import('../views/public/Apply.vue') },
+  { path: '/recruitment', name: 'job-postings', component: () => import('../views/recruitment/JobPostings.vue'), meta: { requiresAuth: true } },
+  { path: '/recruitment/postings/:id', name: 'pipeline', component: () => import('../views/recruitment/Pipeline.vue'), meta: { requiresAuth: true } },
   { path: '/', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { requiresAuth: true } },
   { path: '/settings/school-profile', name: 'school-profile', component: () => import('../views/settings/SchoolProfile.vue'), meta: { requiresAuth: true } },
   { path: '/settings/academic-calendar', name: 'academic-calendar', component: () => import('../views/settings/AcademicCalendar.vue'), meta: { requiresAuth: true } },
