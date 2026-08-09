@@ -52,7 +52,9 @@ npm run dev                 # http://localhost:5173
 - **Mobile responsiveness** — the app shell's sidebar is a slide-over drawer below the `md` breakpoint (hamburger toggle, backdrop, auto-closes on navigation); tables that could overflow scroll horizontally instead of breaking layout.
 - **Runs on MySQL or SQLite interchangeably** — same migrations, verified against both.
 
-Phase 1 (`milestones.md`) is complete. Phase 2 (students + fees) is complete. Phase 3 (results + report cards) is complete. **Phase 4 is complete**: promotion (append-only, idempotent), graduation (terminal), and a combined fees + results public portal — one admission-number lookup shows both, with a fee-related block withholding only the results (not the balance itself, since the parent needs to see what's owed to resolve it).
+Phase 1 (`milestones.md`) is complete. Phase 2 (students + fees) is complete. Phase 3 (results + report cards) is complete. Phase 4 is complete: promotion (append-only, idempotent), graduation (terminal), and a combined fees + results public portal — one admission-number lookup shows both, with a fee-related block withholding only the results (not the balance itself, since the parent needs to see what's owed to resolve it). **Phase 5 is complete**: real notification settings with encrypted SMTP/SMS credentials and actual delivery attempts (verified end-to-end against a local test SMTP server — not simulated), bulk send, and a recruitment module with a public application form, pipeline board, and a one-click hire-to-staff shortcut.
+
+**All five phases in `milestones.md` are now built.**
 
 ## Real bugs found and fixed while building this
 
@@ -65,7 +67,13 @@ These are exactly the class of bug that "works fine in dev, breaks in production
 
 ## What's next
 
-Phase 5: notification settings (real SMTP/SMS provider configuration, replacing the honest "no provider configured" state), bulk email/SMS, and the recruitment module, per `milestones.md` and `addendum-v4.md`.
+Everything in `milestones.md` Phases 1–5 is built. What's left is scoped in later docs rather than the milestone list itself:
+- **Phase 6** (`addendum-v4.md` §11): fine-grained permission overrides beyond the base role system, optimistic-locking/live-edit awareness for concurrent editing, PWA polish, timetable module.
+- **Phase 7**: role-based dashboards (`dashboards/` module — different layouts per role, not just filtered data).
+- **Phase 8**: the developer/platform console (cross-school SMTP/SMS/Paystack key management, module licensing, error logs, usage analytics) — a genuinely separate tier from anything built so far, since everything here has been single-school-scoped.
+- **Phase 9** (`accounting-rules-of-engagement.md`): sundry sales and double-entry accounting, with the chart-of-accounts and auto-posting rules already defined, not yet built.
+
+Smaller open items: the SMS provider integration is written against a generic Termii-shaped API but has never been tested against a real account/key (only the encryption/storage and the honest-failure path are verified); a couple of forms still reference class/term by raw ID in places a friendlier picker would help; recruitment resume upload isn't wired (the `resume_url` column exists, no file upload UI yet).
 
 ## Folder structure
 
