@@ -59,7 +59,7 @@ async function submit() {
         <div class="flex-1 h-px bg-slate-200"></div>
       </div>
       <RouterLink to="/result-check" class="w-full h-[42px] flex items-center justify-center gap-2 border border-primary text-primary text-sm font-medium rounded-lg hover:bg-primary-50">
-        Check your child's result
+        Check fees &amp; results
       </RouterLink>
     </div>
   </div>
