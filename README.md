@@ -52,7 +52,7 @@ npm run dev                 # http://localhost:5173
 - **Mobile responsiveness** — the app shell's sidebar is a slide-over drawer below the `md` breakpoint (hamburger toggle, backdrop, auto-closes on navigation); tables that could overflow scroll horizontally instead of breaking layout.
 - **Runs on MySQL or SQLite interchangeably** — same migrations, verified against both.
 
-Phase 1 (`milestones.md`) is complete. Phase 2 (students + fees) is complete. Phase 3 (results + report cards) is complete. Phase 4's core (promotion, graduation, public result check) is also done — the logged-in parent/student portal (combining fees + results in one place) is the one piece of Phase 4 not yet built.
+Phase 1 (`milestones.md`) is complete. Phase 2 (students + fees) is complete. Phase 3 (results + report cards) is complete. **Phase 4 is complete**: promotion (append-only, idempotent), graduation (terminal), and a combined fees + results public portal — one admission-number lookup shows both, with a fee-related block withholding only the results (not the balance itself, since the parent needs to see what's owed to resolve it).
 
 ## Real bugs found and fixed while building this
 
@@ -65,7 +65,7 @@ These are exactly the class of bug that "works fine in dev, breaks in production
 
 ## What's next
 
-The logged-in parent/student portal (fees + published results together, finishing Phase 4), then notifications settings + recruitment (Phase 5), per `milestones.md` and `addendum-v4.md`.
+Phase 5: notification settings (real SMTP/SMS provider configuration, replacing the honest "no provider configured" state), bulk email/SMS, and the recruitment module, per `milestones.md` and `addendum-v4.md`.
 
 ## Folder structure
 
