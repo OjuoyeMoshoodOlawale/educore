@@ -15,9 +15,6 @@ const selectedClassId = ref(null);
 const selectedTermId = ref(null);
 const structure = ref(null);
 const feeItems = ref([]);
-
-const showAddItem = ref(false);
-const newItemName = ref('');
 const showCopy = ref(false);
 const copyFromTermId = ref(null);
 
@@ -37,6 +34,7 @@ async function loadBase() {
     selectedTermId.value = terms.value.find((t) => t.is_current)?.id || terms.value[0]?.id;
   }
   selectedClassId.value = classes.value[0]?.id;
+  await loadStructure();
 }
 onMounted(loadBase);
 
@@ -44,15 +42,6 @@ async function loadStructure() {
   if (!selectedClassId.value || !selectedTermId.value) return;
   const res = await api.get(`/fees/structure/${selectedClassId.value}/${selectedTermId.value}`);
   structure.value = res.data.data;
-}
-
-async function addFeeItem() {
-  await api.post('/fees/items', { name: newItemName.value });
-  newItemName.value = '';
-  showAddItem.value = false;
-  const res = await api.get('/fees/items');
-  feeItems.value = res.data.data;
-  toast.success('Fee item added');
 }
 
 async function addRow(feeItemId) {
@@ -91,7 +80,6 @@ const itemsNotYetAdded = computed(() => {
 <template>
   <PageHeader title="Fee structure" subtitle="Per class, per term, with gender/intake/boarding eligibility.">
     <template #actions>
-      <button class="h-9 px-3 text-[13px] font-medium rounded-lg border border-slate-300 text-slate-600" @click="showAddItem = true">New fee item</button>
       <button class="h-9 px-3 text-[13px] font-medium rounded-lg border border-slate-300 text-slate-600" @click="showCopy = true">Copy from term</button>
     </template>
   </PageHeader>
@@ -103,7 +91,6 @@ const itemsNotYetAdded = computed(() => {
     <select v-model.number="selectedTermId" class="h-9 px-3 rounded-lg border border-slate-300 text-[13px]" @change="loadStructure">
       <option v-for="t in terms" :key="t.id" :value="t.id">{{ t.name }}</option>
     </select>
-    <button class="h-9 px-3 text-[13px] font-medium rounded-lg bg-primary text-white" @click="loadStructure">Load</button>
   </div>
 
   <Spinner v-if="!structure" />
@@ -132,14 +119,7 @@ const itemsNotYetAdded = computed(() => {
       + Add "{{ item.name }}" to this class/term
     </button>
   </div>
-
-  <Modal v-model="showAddItem" title="New fee item" size="sm">
-    <Field label="Name"><input v-model="newItemName" placeholder="e.g. Tuition" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm" /></Field>
-    <template #footer>
-      <button class="px-4 h-9 text-[13px] font-medium rounded-lg text-slate-600 hover:bg-slate-100" @click="showAddItem = false">Cancel</button>
-      <button class="px-4 h-9 text-[13px] font-medium rounded-lg bg-primary text-white" @click="addFeeItem">Add item</button>
-    </template>
-  </Modal>
+  <p v-if="structure && !feeItems.length" class="text-[12px] text-slate-400 mt-3">No fee items exist yet — <RouterLink to="/fees/items" class="text-primary hover:underline">add some first</RouterLink>.</p>
 
   <Modal v-model="showCopy" title="Copy fee structure" size="sm">
     <Field label="Copy from which term?">

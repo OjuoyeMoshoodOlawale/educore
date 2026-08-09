@@ -145,6 +145,40 @@ router.put('/subjects/:id', requireRole('admin', 'developer'), validate(subjectS
   res.json({ success: true, data: await db('subjects').where({ id: req.params.id }).first() });
 });
 
+// ---- Psychomotor/affective trait definitions (school-editable, per platform request — not static) ----
+router.get('/traits/:domain', async (req, res) => {
+  const traits = await db('trait_definitions').where({ school_id: req.user.school_id, domain: req.params.domain, is_active: true }).orderBy('display_order');
+  res.json({ success: true, data: traits });
+});
+
+router.post('/traits', requireRole('admin', 'developer'), async (req, res) => {
+  const { domain, description } = req.body;
+  const maxOrder = await db('trait_definitions').where({ school_id: req.user.school_id, domain }).max('display_order as m').first();
+  const [id] = await db('trait_definitions').insert({ school_id: req.user.school_id, domain, description, display_order: (maxOrder?.m ?? -1) + 1 });
+  res.status(201).json({ success: true, data: await db('trait_definitions').where({ id }).first() });
+});
+
+router.put('/traits/:id', requireRole('admin', 'developer'), async (req, res) => {
+  await db('trait_definitions').where({ id: req.params.id }).update({ description: req.body.description, updated_at: db.fn.now() });
+  res.json({ success: true, data: await db('trait_definitions').where({ id: req.params.id }).first() });
+});
+
+// Soft delete — a trait removed from the active list stops appearing for future entries, but any
+// student who already has a rating against it keeps that rating on record (same "never delete
+// education history" principle used for dropped subjects, addendum-v4.md §10.5).
+router.delete('/traits/:id', requireRole('admin', 'developer'), async (req, res) => {
+  await db('trait_definitions').where({ id: req.params.id }).update({ is_active: false, updated_at: db.fn.now() });
+  res.json({ success: true, data: null });
+});
+
+router.put('/traits/reorder', requireRole('admin', 'developer'), async (req, res) => {
+  const { orderedIds } = req.body;
+  await db.transaction(async (trx) => {
+    await Promise.all(orderedIds.map((id, index) => trx('trait_definitions').where({ id }).update({ display_order: index })));
+  });
+  res.json({ success: true, data: null });
+});
+
 // ---- Grading scale (school-custom, fully editable) ----
 router.get('/grading-scale', async (req, res) => {
   const [gradeBoundaries, ratingKeys] = await Promise.all([

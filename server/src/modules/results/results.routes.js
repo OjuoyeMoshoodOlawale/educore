@@ -43,7 +43,7 @@ router.put('/scores/:studentId/:subjectId/:termId', requireRole('admin', 'develo
 
 // ---- Psychomotor / affective ----
 router.get('/traits/:domain', async (req, res) => {
-  const traits = await db('trait_definitions').where({ school_id: req.user.school_id, domain: req.params.domain }).orderBy('display_order');
+  const traits = await db('trait_definitions').where({ school_id: req.user.school_id, domain: req.params.domain, is_active: true }).orderBy('display_order');
   res.json({ success: true, data: traits });
 });
 
@@ -51,7 +51,7 @@ router.get('/traits/:domain/:classId/:termId', async (req, res) => {
   const { domain, classId, termId } = req.params;
   const [students, traits, ratingKeys] = await Promise.all([
     db('student_terms as st').join('students as s', 's.id', 'st.student_id').where({ 'st.class_id': classId, 'st.term_id': termId }).select('s.id', 's.first_name', 's.last_name'),
-    db('trait_definitions').where({ school_id: req.user.school_id, domain }).orderBy('display_order'),
+    db('trait_definitions').where({ school_id: req.user.school_id, domain, is_active: true }).orderBy('display_order'),
     db('rating_keys').where({ school_id: req.user.school_id }).orderBy('key_value', 'desc')
   ]);
   const scores = await db('trait_scores').where({ term_id: termId }).whereIn('student_id', students.map((s) => s.id));

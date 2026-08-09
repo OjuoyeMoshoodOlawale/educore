@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import { useRoute, RouterLink, RouterView } from 'vue-router';
 import { useAuthStore } from './stores/auth';
 import ToastContainer from './components/base/ToastContainer.vue';
@@ -7,6 +7,49 @@ import ToastContainer from './components/base/ToastContainer.vue';
 const route = useRoute();
 const auth = useAuthStore();
 const sidebarOpen = ref(false);
+
+const groups = [
+  { key: 'fees', label: 'Fees', prefix: '/fees', items: [
+    { to: '/fees/items', label: 'Fee items' },
+    { to: '/fees/structure', label: 'Fee structure' },
+    { to: '/fees/payment-accounts', label: 'Payment accounts' },
+    { to: '/fees/reports', label: 'Defaulters' }
+  ] },
+  { key: 'staff', label: 'Staff', prefix: '/staff', items: [
+    { to: '/staff', label: 'All staff' },
+    { to: '/staff/allocation', label: 'Allocation' }
+  ] },
+  { key: 'results', label: 'Results', prefix: '/results', items: [
+    { to: '/results/score-entry', label: 'Score entry' },
+    { to: '/results/psychomotor-affective', label: 'Psychomotor & affective' },
+    { to: '/results/remarks', label: 'Attendance & comments' },
+    { to: '/results/broadsheet', label: 'Broadsheet' },
+    { to: '/results/publish', label: 'Publish' }
+  ] },
+  { key: 'termEnd', label: 'Term end', prefix: null, items: [
+    { to: '/promotion', label: 'Promotion' },
+    { to: '/graduation', label: 'Graduation' }
+  ] },
+  { key: 'settings', label: 'Settings', prefix: '/settings', items: [
+    { to: '/settings/school-profile', label: 'School profile' },
+    { to: '/settings/academic-calendar', label: 'Academic calendar' },
+    { to: '/settings/classes-sections', label: 'Classes & sections' },
+    { to: '/settings/subjects', label: 'Subjects' },
+    { to: '/settings/grading-scale', label: 'Grading scale' },
+    { to: '/settings/traits', label: 'Psychomotor & affective traits' },
+    { to: '/settings/number-sequences', label: 'Number sequences' }
+  ] }
+];
+
+// Open the group containing the current route by default; every group otherwise starts collapsed.
+const open = reactive(Object.fromEntries(groups.map((g) => [
+  g.key,
+  g.prefix ? route.path.startsWith(g.prefix) : g.items.some((i) => i.to === route.path)
+])));
+
+function toggle(key) {
+  open[key] = !open[key];
+}
 
 // Close the mobile drawer automatically on navigation.
 watch(() => route.path, () => { sidebarOpen.value = false; });
@@ -17,46 +60,41 @@ watch(() => route.path, () => { sidebarOpen.value = false; });
     <ToastContainer />
 
     <div v-if="route.meta.requiresAuth" class="flex min-h-screen">
-      <!-- Mobile backdrop -->
       <div v-if="sidebarOpen" class="fixed inset-0 bg-black/40 z-30 md:hidden" @click="sidebarOpen = false"></div>
 
       <aside
         class="fixed md:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-out md:translate-x-0"
         :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
       >
-        <div class="h-16 flex items-center gap-2 px-5 border-b border-slate-200">
+        <div class="h-16 flex items-center gap-2 px-5 border-b border-slate-200 flex-shrink-0">
           <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span class="text-accent text-sm font-semibold">E</span>
           </div>
           <span class="text-[15px] font-medium text-slate-900">EduCore</span>
         </div>
+
         <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1 text-sm">
-          <RouterLink to="/" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Dashboard</RouterLink>
-          <RouterLink to="/students" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Students</RouterLink>
-          <RouterLink to="/fees/structure" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Fee structure</RouterLink>
-          <RouterLink to="/fees/payment-accounts" class="flex items-center gap-2.5 pl-9 pr-3 py-1.5 rounded text-[13px] text-slate-500 hover:bg-slate-100">Payment accounts</RouterLink>
-          <RouterLink to="/fees/reports" class="flex items-center gap-2.5 pl-9 pr-3 py-1.5 rounded text-[13px] text-slate-500 hover:bg-slate-100">Defaulters</RouterLink>
-          <RouterLink to="/notifications" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Notification log</RouterLink>
-          <div class="pt-3 mt-3 border-t border-slate-200 text-[11px] font-medium text-slate-400 px-3">Results</div>
-          <RouterLink to="/results/score-entry" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Score entry</RouterLink>
-          <RouterLink to="/results/psychomotor-affective" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Psychomotor &amp; affective</RouterLink>
-          <RouterLink to="/results/remarks" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Attendance &amp; comments</RouterLink>
-          <RouterLink to="/results/broadsheet" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Broadsheet</RouterLink>
-          <RouterLink to="/results/publish" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Publish</RouterLink>
-          <div class="pt-3 mt-3 border-t border-slate-200 text-[11px] font-medium text-slate-400 px-3">Term end</div>
-          <RouterLink to="/promotion" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Promotion</RouterLink>
-          <RouterLink to="/graduation" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Graduation</RouterLink>
-          <RouterLink to="/staff" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Staff</RouterLink>
-          <RouterLink to="/staff/allocation" class="flex items-center gap-2.5 pl-9 pr-3 py-1.5 rounded text-[13px] text-slate-500 hover:bg-slate-100">Allocation</RouterLink>
-          <div class="pt-3 mt-3 border-t border-slate-200 text-[11px] font-medium text-slate-400 px-3">Settings</div>
-          <RouterLink to="/settings/school-profile" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">School profile</RouterLink>
-          <RouterLink to="/settings/academic-calendar" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Academic calendar</RouterLink>
-          <RouterLink to="/settings/classes-sections" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Classes &amp; sections</RouterLink>
-          <RouterLink to="/settings/subjects" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Subjects</RouterLink>
-          <RouterLink to="/settings/grading-scale" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Grading scale</RouterLink>
-          <RouterLink to="/settings/number-sequences" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100">Number sequences</RouterLink>
+          <RouterLink to="/" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100" active-class="bg-primary-50 text-primary font-medium">Dashboard</RouterLink>
+          <RouterLink to="/students" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100" active-class="bg-primary-50 text-primary font-medium">Students</RouterLink>
+
+          <div v-for="g in groups" :key="g.key" class="pt-1">
+            <button class="w-full flex items-center gap-3 px-3 py-2 rounded text-sm text-slate-600 hover:bg-slate-100" @click="toggle(g.key)">
+              <span>{{ g.label }}</span>
+              <span class="ml-auto text-[12px] text-slate-400 transition-transform" :class="open[g.key] ? 'rotate-180' : ''">&#9660;</span>
+            </button>
+            <div v-show="open[g.key]" class="mt-1 space-y-1">
+              <RouterLink
+                v-for="item in g.items" :key="item.to" :to="item.to"
+                class="flex items-center gap-2 pl-9 pr-3 py-1.5 rounded text-[13px] text-slate-500 hover:bg-slate-100"
+                active-class="text-primary font-medium bg-primary-50"
+              >{{ item.label }}</RouterLink>
+            </div>
+          </div>
+
+          <RouterLink to="/notifications" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100 mt-2" active-class="bg-primary-50 text-primary font-medium">Notification log</RouterLink>
         </nav>
-        <div class="p-3 border-t border-slate-200">
+
+        <div class="p-3 border-t border-slate-200 flex-shrink-0">
           <button class="w-full text-left px-3 py-2 rounded text-sm text-slate-600 hover:bg-slate-100" @click="auth.logout(); $router.push('/sign-in')">Sign out</button>
         </div>
       </aside>
