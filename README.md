@@ -56,6 +56,8 @@ Phase 1 (`milestones.md`) is complete. Phase 2 (students + fees) is complete. Ph
 
 **All five phases in `milestones.md` are now built.**
 
+**Since then:** the fee module was rebuilt to match `schoolfees-manager`'s real, tested logic exactly (its source was read directly, not from memory) — materialized bills via a Generate Bills action, snapshotted carry-forward via auto-compute, and the same adjustment validation rules (type + calc_mode, mandatory reason, percent/fixed caps). A developer-only console now gates the fees and results modules behind per-school activation, matching `schoolfees-manager`'s own DevSettingsPage pattern.
+
 ## Real bugs found and fixed while building this
 
 Worth knowing about even independent of this project:
