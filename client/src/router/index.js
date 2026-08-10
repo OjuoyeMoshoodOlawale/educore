@@ -26,6 +26,7 @@ const routes = [
   { path: '/fees/reports', name: 'fee-reports', component: () => import('../views/fees/Reports.vue'), meta: { requiresAuth: true } },
   { path: '/notifications', name: 'notification-log', component: () => import('../views/notifications/NotificationLog.vue'), meta: { requiresAuth: true } },
   { path: '/settings/notifications', name: 'notification-settings', component: () => import('../views/settings/NotificationSettings.vue'), meta: { requiresAuth: true } },
+  { path: '/settings/permissions', name: 'permission-overrides', component: () => import('../views/settings/PermissionOverrides.vue'), meta: { requiresAuth: true } },
   { path: '/results/score-entry', name: 'score-entry', component: () => import('../views/results/ScoreEntry.vue'), meta: { requiresAuth: true } },
   { path: '/results/psychomotor-affective', name: 'psychomotor-affective', component: () => import('../views/results/PsychomotorAffective.vue'), meta: { requiresAuth: true } },
   { path: '/results/remarks', name: 'remarks', component: () => import('../views/results/Remarks.vue'), meta: { requiresAuth: true } },

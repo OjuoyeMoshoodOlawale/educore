@@ -4,6 +4,7 @@ import { db } from '../../config/db.js';
 import { validate } from '../../helpers/validate.js';
 import { requireAuth, requireRole } from '../../middleware/auth.js';
 import { requireModule } from '../../middleware/moduleGate.js';
+import { requirePermission } from '../../middleware/permissions.js';
 import { getStudentLedger, generateClassBills, autoComputeCarryover } from './fees.service.js';
 import { nextInSequence } from '../../helpers/numberSequence.js';
 
@@ -39,12 +40,12 @@ const structureSchema = z.object({
   applies_to_boarding_type: z.enum(['all', 'day', 'boarder']).optional()
 });
 
-router.post('/structure', requireRole('admin', 'developer', 'bursar'), validate(structureSchema), async (req, res) => {
+router.post('/structure', requirePermission('fees.manage_structure'), validate(structureSchema), async (req, res) => {
   const [id] = await db('fee_structures').insert({ school_id: req.user.school_id, ...req.validated });
   res.status(201).json({ success: true, data: await db('fee_structures').where({ id }).first() });
 });
 
-router.put('/structure/:id', requireRole('admin', 'developer', 'bursar'), async (req, res) => {
+router.put('/structure/:id', requirePermission('fees.manage_structure'), async (req, res) => {
   await db('fee_structures').where({ id: req.params.id }).update({ amount: req.body.amount, updated_at: db.fn.now() });
   res.json({ success: true, data: await db('fee_structures').where({ id: req.params.id }).first() });
 });
@@ -181,7 +182,7 @@ const paymentSchema = z.object({
   payment_account_id: z.number().int().positive().optional()
 });
 
-router.post('/payments', requireRole('admin', 'developer', 'bursar'), validate(paymentSchema), async (req, res) => {
+router.post('/payments', requirePermission('fees.record_payment'), validate(paymentSchema), async (req, res) => {
   let receiptNo;
   try {
     receiptNo = await nextInSequence(db, req.user.school_id, 'receipt_no');

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../../config/db.js';
 import { requireAuth, requireRole } from '../../middleware/auth.js';
 import { requireModule } from '../../middleware/moduleGate.js';
+import { requirePermission } from '../../middleware/permissions.js';
 import { saveScore, getStudentSubjectScores, getClassRanking, getCumulativeAverage, suggestComment } from './results.service.js';
 
 const router = Router();
@@ -184,7 +185,7 @@ router.get('/publish/:termId', async (req, res) => {
   res.json({ success: true, data });
 });
 
-router.post('/publish/:classId/:termId', requireRole('admin', 'developer', 'principal'), async (req, res) => {
+router.post('/publish/:classId/:termId', requirePermission('results.publish'), async (req, res) => {
   const { classId, termId } = req.params;
   const existing = await db('term_class_publications').where({ class_id: classId, term_id: termId }).first();
   const row = { is_published: true, published_at: db.fn.now(), published_by_staff_id: req.user.staff_id };

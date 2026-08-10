@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '../../config/db.js';
 import { validate } from '../../helpers/validate.js';
 import { requireAuth, requireRole } from '../../middleware/auth.js';
+import { requirePermission } from '../../middleware/permissions.js';
 import { nextInSequence } from '../../helpers/numberSequence.js';
 
 const router = Router();
@@ -76,7 +77,7 @@ router.post('/', requireRole('admin', 'developer', 'bursar'), validate(studentSc
   res.status(201).json({ success: true, data: result });
 });
 
-router.put('/:id', requireRole('admin', 'developer', 'bursar'), validate(studentSchema.partial()), async (req, res) => {
+router.put('/:id', requirePermission('students.edit'), validate(studentSchema.partial()), async (req, res) => {
   const { class_id, term_id, intake_type, guardians, ...profile } = req.validated;
   await db('students').where({ id: req.params.id }).update({ ...profile, updated_at: db.fn.now() });
   res.json({ success: true, data: await db('students').where({ id: req.params.id }).first() });

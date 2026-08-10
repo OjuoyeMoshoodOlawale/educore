@@ -13,6 +13,7 @@ import promotionRoutes from './modules/promotion/promotion.routes.js';
 import publicRoutes from './modules/public/public.routes.js';
 import recruitmentRoutes from './modules/recruitment/recruitment.routes.js';
 import developerRoutes from './modules/developer/developer.routes.js';
+import permissionsRoutes from './modules/permissions/permissions.routes.js';
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/promotion', promotionRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/recruitment', recruitmentRoutes);
 app.use('/api/developer', developerRoutes);
+app.use('/api/settings/permissions', permissionsRoutes);
 
 // Every uncaught error becomes a generic 500 to the client — real detail goes to the server log only.
 app.use((err, req, res, next) => {

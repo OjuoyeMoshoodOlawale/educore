@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '../../config/db.js';
 import { validate } from '../../helpers/validate.js';
 import { requireAuth, requireRole } from '../../middleware/auth.js';
+import { requirePermission } from '../../middleware/permissions.js';
 import { nextInSequence } from '../../helpers/numberSequence.js';
 
 const router = Router();
@@ -34,7 +35,7 @@ router.post('/', requireRole('admin', 'developer'), validate(staffSchema), async
   res.status(201).json({ success: true, data: await db('staff').where({ id }).first() });
 });
 
-router.put('/:id', requireRole('admin', 'developer'), validate(staffSchema), async (req, res) => {
+router.put('/:id', requirePermission('staff.edit'), validate(staffSchema), async (req, res) => {
   await db('staff').where({ id: req.params.id }).update({ ...req.validated, updated_at: db.fn.now() });
   res.json({ success: true, data: await db('staff').where({ id: req.params.id }).first() });
 });
