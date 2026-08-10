@@ -1,6 +1,13 @@
 import bcrypt from 'bcryptjs';
 
 export async function seed(knex) {
+  await knex('interview_schedule').del();
+  await knex('application_stages').del();
+  await knex('applicants').del();
+  await knex('job_postings').del();
+  await knex('school_modules').del();
+  await knex('previous_term_balance').del();
+  await knex('student_bills').del();
   await knex('term_class_publications').del();
   await knex('trait_scores').del();
   await knex('trait_definitions').del();
@@ -90,7 +97,7 @@ export async function seed(knex) {
   await knex('number_sequences').insert([
     { school_id: schoolId, sequence_for: 'admission_no', format: '{PREFIX}/{YEAR}/{SEQ4}', prefix: 'ISS', next_number: 148, reset_period: 'yearly' },
     { school_id: schoolId, sequence_for: 'staff_no', format: '{PREFIX}-{SEQ3}', prefix: 'STF', next_number: 18, reset_period: 'never' },
-    { school_id: schoolId, sequence_for: 'receipt_no', format: '{PREFIX}-{YEAR}-{SEQ4}', prefix: 'RCT', next_number: 4, reset_period: 'yearly' }
+    { school_id: schoolId, sequence_for: 'receipt_no', format: '{PREFIX}-{YEAR}-{SEQ4}', prefix: 'RCP', next_number: 4, reset_period: 'yearly' }
   ]);
 
   // ---------------------------------------------------------------- Fees setup
@@ -216,7 +223,7 @@ export async function seed(knex) {
   // ---------------------------------------------------------------- Payments (mix of paid-up and defaulters)
   const receiptSeq = { n: 1 };
   async function pay(studentId, amount, method, accountId) {
-    const receiptNo = `RCT-2026-${String(receiptSeq.n++).padStart(4, '0')}`;
+    const receiptNo = `RCP-2026-${String(receiptSeq.n++).padStart(4, "0")}`;
     await knex('payments').insert({ student_id: studentId, term_id: secondTerm.id, payment_account_id: accountId, amount, method, receipt_no: receiptNo, received_by_staff_id: staffByName['Hauwa'] });
   }
   await pay(students['Amina'], 80000, 'bank', accounts[1].id); // partial — leaves a balance (defaulter demo)
@@ -281,6 +288,13 @@ export async function seed(knex) {
   await knex('notification_log').insert([
     { school_id: schoolId, channel: 'sms', recipient: '08031234567', message: 'Reminder: Kelechi Nwosu has an outstanding balance of \u20a648,000 this term.', status: 'failed', provider_response: 'No SMS/email provider configured for this school yet', related_student_id: students['Kelechi'] },
     { school_id: schoolId, channel: 'email', recipient: 'guardian@example.com', message: 'Payment receipt \u2014 \u20a680,000 received', status: 'failed', provider_response: 'No SMS/email provider configured for this school yet', related_student_id: students['Amina'] }
+  ]);
+
+  // ---------------------------------------------------------------- Module activation (developer console)
+  // Active by default for this trusted demo school — the developer console can deactivate either.
+  await knex('school_modules').insert([
+    { school_id: schoolId, module: 'fees', is_active: true, activated_by_staff_id: staffByName['Admin'], activated_at: knex.fn.now() },
+    { school_id: schoolId, module: 'report_card', is_active: true, activated_by_staff_id: staffByName['Admin'], activated_at: knex.fn.now() }
   ]);
 
   console.log('Seeded demo data: 1 school, 3 classes, 5 subjects, 8 students, 8 staff (5 with logins), fees, scores, traits, remarks. JSS 2 (second term) published.');

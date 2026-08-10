@@ -9,6 +9,9 @@ const auth = useAuthStore();
 const sidebarOpen = ref(false);
 
 const groups = [
+  { key: 'developer', label: 'Developer', prefix: '/developer', items: [
+    { to: '/developer/settings', label: 'Module activation' }
+  ], roleOnly: 'developer' },
   { key: 'fees', label: 'Fees', prefix: '/fees', items: [
     { to: '/fees/items', label: 'Fee items' },
     { to: '/fees/structure', label: 'Fee structure' },
@@ -81,7 +84,7 @@ watch(() => route.path, () => { sidebarOpen.value = false; });
           <RouterLink to="/" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100" active-class="bg-primary-50 text-primary font-medium">Dashboard</RouterLink>
           <RouterLink to="/students" class="flex items-center gap-2.5 px-3 py-2 rounded text-slate-600 hover:bg-slate-100" active-class="bg-primary-50 text-primary font-medium">Students</RouterLink>
 
-          <div v-for="g in groups" :key="g.key" class="pt-1">
+          <div v-for="g in groups.filter(g => !g.roleOnly || auth.user?.role === g.roleOnly)" :key="g.key" class="pt-1">
             <button class="w-full flex items-center gap-3 px-3 py-2 rounded text-sm text-slate-600 hover:bg-slate-100" @click="toggle(g.key)">
               <span>{{ g.label }}</span>
               <span class="ml-auto text-[12px] text-slate-400 transition-transform" :class="open[g.key] ? 'rotate-180' : ''">&#9660;</span>

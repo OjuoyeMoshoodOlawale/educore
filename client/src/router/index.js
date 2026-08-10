@@ -33,7 +33,8 @@ const routes = [
   { path: '/results/broadsheet', name: 'broadsheet', component: () => import('../views/results/Broadsheet.vue'), meta: { requiresAuth: true } },
   { path: '/results/publish', name: 'publish', component: () => import('../views/results/Publish.vue'), meta: { requiresAuth: true } },
   { path: '/promotion', name: 'promotion', component: () => import('../views/promotion/Promotion.vue'), meta: { requiresAuth: true } },
-  { path: '/graduation', name: 'graduation', component: () => import('../views/promotion/Graduation.vue'), meta: { requiresAuth: true } }
+  { path: '/graduation', name: 'graduation', component: () => import('../views/promotion/Graduation.vue'), meta: { requiresAuth: true } },
+  { path: '/developer/settings', name: 'developer-settings', component: () => import('../views/developer/DeveloperSettings.vue'), meta: { requiresAuth: true } }
 ];
 
 export const router = createRouter({ history: createWebHistory(), routes });

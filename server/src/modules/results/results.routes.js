@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { db } from '../../config/db.js';
 import { requireAuth, requireRole } from '../../middleware/auth.js';
+import { requireModule } from '../../middleware/moduleGate.js';
 import { saveScore, getStudentSubjectScores, getClassRanking, getCumulativeAverage, suggestComment } from './results.service.js';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireModule('report_card'));
 
 // ---- Score entry ----
 router.get('/scores/:classId/:subjectId/:termId', async (req, res) => {
