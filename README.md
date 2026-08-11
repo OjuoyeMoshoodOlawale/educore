@@ -70,7 +70,7 @@ These are exactly the class of bug that "works fine in dev, breaks in production
 ## What's next
 
 Everything in `milestones.md` Phases 1–5 is built. What's left is scoped in later docs rather than the milestone list itself:
-- **Phase 6** (`addendum-v4.md` §11): fine-grained permission overrides — **done** (5 representative capabilities; extending coverage to more routes is incremental from here, not a new mechanism). Still open: optimistic-locking/live-edit awareness for concurrent editing, PWA polish, timetable module.
+- **Phase 6** (`addendum-v4.md` §11): fine-grained permission overrides — **done**. Optimistic locking / live-edit awareness — **done for score entry** (the specific highest-contention case named in the doc), extending the same pattern to other concurrently-edited tables is incremental from here. PWA icons — **done** (real branded PNGs, was previously a broken manifest reference). Still open: timetable module.
 - **Phase 7**: role-based dashboards (`dashboards/` module — different layouts per role, not just filtered data).
 - **Phase 8**: the developer/platform console (cross-school SMTP/SMS/Paystack key management, module licensing, error logs, usage analytics) — a genuinely separate tier from anything built so far, since everything here has been single-school-scoped.
 - **Phase 9** (`accounting-rules-of-engagement.md`): sundry sales and double-entry accounting, with the chart-of-accounts and auto-posting rules already defined, not yet built.
