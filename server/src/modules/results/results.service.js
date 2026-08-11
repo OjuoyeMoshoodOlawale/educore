@@ -21,7 +21,17 @@ async function lookupGrade(trx, schoolId, total) {
   return match ? match.grade_key : null;
 }
 
-export async function saveScore(db, { studentId, termId, subjectId, ca1, ca2, exam, staffId }) {
+// A conflict error carries the current row so the caller can show the person what actually
+// landed, rather than a generic "please retry" — see addendum-v4.md §9 on live-edit awareness.
+export class ScoreConflictError extends Error {
+  constructor(currentRow) {
+    super('This score was changed by someone else — see the latest value below.');
+    this.status = 409;
+    this.currentRow = currentRow;
+  }
+}
+
+export async function saveScore(db, { studentId, termId, subjectId, ca1, ca2, exam, staffId, expectedVersion }) {
   return db.transaction(async (trx) => {
     const subject = await trx('subjects').where({ id: subjectId }).first();
     const student = await trx('students').where({ id: studentId }).first();
@@ -32,11 +42,21 @@ export async function saveScore(db, { studentId, termId, subjectId, ca1, ca2, ex
     const row = { ca1, ca2, exam, total, computed_grade: grade, entered_by_staff_id: staffId };
 
     if (existing) {
-      await trx('subject_scores').where({ id: existing.id }).update({ ...row, updated_at: trx.fn.now() });
+      // Optimistic lock: only apply if nobody else has saved a version newer than what this
+      // teacher last loaded. expectedVersion === undefined means "I never saw a version" (first
+      // save this session) — treated as trusting the current state, same as before this feature.
+      if (expectedVersion !== undefined && Number(expectedVersion) !== existing.version) {
+        throw new ScoreConflictError(existing);
+      }
+      const updated = await trx('subject_scores')
+        .where({ id: existing.id, version: existing.version })
+        .update({ ...row, version: existing.version + 1, updated_at: trx.fn.now() });
+      if (updated === 0) throw new ScoreConflictError(await trx('subject_scores').where({ id: existing.id }).first());
     } else {
-      await trx('subject_scores').insert({ student_id: studentId, term_id: termId, subject_id: subjectId, ...row });
+      await trx('subject_scores').insert({ student_id: studentId, term_id: termId, subject_id: subjectId, ...row, version: 1 });
     }
-    return { total, grade, subjectMax: { ca1: subject.ca1_max, ca2: subject.ca2_max, exam: subject.exam_max } };
+    const saved = await trx('subject_scores').where({ student_id: studentId, term_id: termId, subject_id: subjectId }).first();
+    return { total, grade, version: saved.version, subjectMax: { ca1: subject.ca1_max, ca2: subject.ca2_max, exam: subject.exam_max } };
   });
 }
 

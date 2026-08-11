@@ -47,14 +47,20 @@ async function saveScore(student) {
   const ca1 = student.score?.ca1 ?? 0;
   const ca2 = student.score?.ca2 ?? 0;
   const exam = student.score?.exam ?? 0;
+  const version = student.score?.version;
   try {
-    const res = await api.put(`/results/scores/${student.id}/${selectedSubjectId.value}/${selectedTermId.value}`, { ca1, ca2, exam });
+    const res = await api.put(`/results/scores/${student.id}/${selectedSubjectId.value}/${selectedTermId.value}`, { ca1, ca2, exam, version });
     errors.value = { ...errors.value, [student.id]: null };
-    student.score = { ...student.score, total: res.data.data.total, computed_grade: res.data.data.grade };
+    student.score = { ...student.score, total: res.data.data.total, computed_grade: res.data.data.grade, version: res.data.data.version };
   } catch (e) {
     if (e.response?.status === 422) {
       const fieldErrors = Object.fromEntries(e.response.data.errors.map((er) => [er.field, er.message]));
       errors.value = { ...errors.value, [student.id]: fieldErrors };
+    } else if (e.response?.status === 409) {
+      // Someone else saved this exact score first — show what actually landed, don't silently overwrite it.
+      const current = e.response.data.currentRow;
+      student.score = { ...current };
+      toast.warning(`${student.first_name}'s score was just updated by someone else \u2014 showing the latest value`);
     } else {
       toast.error('Could not save this score');
     }

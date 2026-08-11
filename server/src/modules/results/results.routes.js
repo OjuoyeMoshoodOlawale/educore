@@ -3,7 +3,7 @@ import { db } from '../../config/db.js';
 import { requireAuth, requireRole } from '../../middleware/auth.js';
 import { requireModule } from '../../middleware/moduleGate.js';
 import { requirePermission } from '../../middleware/permissions.js';
-import { saveScore, getStudentSubjectScores, getClassRanking, getCumulativeAverage, suggestComment } from './results.service.js';
+import { saveScore, ScoreConflictError, getStudentSubjectScores, getClassRanking, getCumulativeAverage, suggestComment } from './results.service.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -40,7 +40,15 @@ router.put('/scores/:studentId/:subjectId/:termId', requireRole('admin', 'develo
   if (Number(exam) > subject.exam_max) errors.push({ field: 'exam', message: `Exam can't exceed ${subject.exam_max}` });
   if (errors.length) return res.status(422).json({ success: false, errors });
 
-  const result = await saveScore(db, { studentId, termId, subjectId, ca1, ca2, exam, staffId: req.user.staff_id });
+  const result = await saveScore(db, { studentId, termId, subjectId, ca1, ca2, exam, staffId: req.user.staff_id, expectedVersion: req.body.version })
+    .catch((err) => {
+      if (err instanceof ScoreConflictError) return { conflict: err };
+      throw err;
+    });
+
+  if (result.conflict) {
+    return res.status(409).json({ success: false, message: result.conflict.message, currentRow: result.conflict.currentRow });
+  }
   res.json({ success: true, data: result });
 });
 
