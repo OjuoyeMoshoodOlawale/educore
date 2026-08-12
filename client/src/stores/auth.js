@@ -19,6 +19,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const res = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
         this.accessToken = res.data.data.accessToken;
+        this.user = res.data.data.user;
         return true;
       } catch {
         this.accessToken = null;

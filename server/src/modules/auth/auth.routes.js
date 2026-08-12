@@ -57,7 +57,7 @@ router.post('/refresh', async (req, res) => {
     const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     const user = await db('users').where({ id: payload.sub }).first();
     if (!user) return res.status(401).json({ success: false, message: 'Not authenticated' });
-    res.json({ success: true, data: { accessToken: signAccessToken(user) } });
+    res.json({ success: true, data: { accessToken: signAccessToken(user), user: { id: user.id, email: user.email, role: user.role, school_id: user.school_id } } });
   } catch {
     return res.status(401).json({ success: false, message: 'Session expired, please sign in again' });
   }

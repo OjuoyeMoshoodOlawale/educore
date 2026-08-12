@@ -9,15 +9,17 @@ import StatusBadge from '../../components/base/StatusBadge.vue';
 import { useToast } from '../../components/base/useToast';
 
 const staff = ref([]);
-const showAdd = ref(false);
+const showModal = ref(false);
+const editing = ref(null); // null = adding, otherwise the staff row being edited
 const errors = ref({});
 const toast = useToast();
 
-const form = ref({ first_name: '', last_name: '', staff_type: 'class_teacher', phone: '', email: '' });
+const emptyForm = { first_name: '', last_name: '', staff_type: 'class_teacher', phone: '', email: '', is_active: true };
+const form = ref({ ...emptyForm });
 const columns = [
-  { key: 'name', label: 'Name' },
+  { key: 'name', label: 'Name', sortable: true },
   { key: 'staff_no', label: 'Staff no.' },
-  { key: 'staff_type', label: 'Type' },
+  { key: 'staff_type', label: 'Type', sortable: true },
   { key: 'is_active', label: 'Status' }
 ];
 
@@ -27,17 +29,36 @@ async function load() {
 }
 onMounted(load);
 
-async function addStaff() {
+function openAdd() {
+  editing.value = null;
+  form.value = { ...emptyForm };
+  errors.value = {};
+  showModal.value = true;
+}
+function openEdit(row) {
+  editing.value = row;
+  form.value = { first_name: row.first_name, last_name: row.last_name, staff_type: row.staff_type, phone: row.phone || '', email: row.email || '', is_active: !!row.is_active };
+  errors.value = {};
+  showModal.value = true;
+}
+
+async function save() {
   errors.value = {};
   try {
-    await api.post('/staff', form.value);
-    showAdd.value = false;
-    form.value = { first_name: '', last_name: '', staff_type: 'class_teacher', phone: '', email: '' };
-    toast.success('Staff profile saved');
+    if (editing.value) {
+      await api.put(`/staff/${editing.value.id}`, form.value);
+      toast.success('Staff profile updated');
+    } else {
+      await api.post('/staff', form.value);
+      toast.success('Staff profile saved');
+    }
+    showModal.value = false;
     await load();
   } catch (e) {
     if (e.response?.status === 422) {
       errors.value = Object.fromEntries(e.response.data.errors.map((er) => [er.field, er.message]));
+    } else {
+      toast.error(e.response?.data?.message || 'Could not save this staff record');
     }
   }
 }
@@ -46,18 +67,22 @@ async function addStaff() {
 <template>
   <PageHeader title="Staff" :subtitle="`${staff.length} staff members`">
     <template #actions>
-      <button class="h-9 px-3 text-[13px] font-medium rounded-lg bg-primary text-white" @click="showAdd = true">Add staff</button>
+      <button class="h-9 px-3 text-[13px] font-medium rounded-lg bg-primary text-white" @click="openAdd">Add staff</button>
     </template>
   </PageHeader>
 
-  <DataTable :columns="columns" :rows="staff">
+  <DataTable :columns="columns" :rows="staff" searchable :search-keys="['name', 'staff_no', 'staff_type']">
+    <template #cell-name="{ row }"><button class="text-slate-800 hover:text-primary" @click="openEdit(row)">{{ row.name }}</button></template>
     <template #cell-staff_no="{ row }"><span class="font-mono text-[13px] text-slate-500">{{ row.staff_no }}</span></template>
     <template #cell-is_active="{ row }">
       <StatusBadge :variant="row.is_active ? 'success' : 'neutral'" :label="row.is_active ? 'Active' : 'Inactive'" />
     </template>
+    <template #actions="{ row }">
+      <button class="text-primary text-[13px]" @click="openEdit(row)">Edit</button>
+    </template>
   </DataTable>
 
-  <Modal v-model="showAdd" title="Add staff">
+  <Modal v-model="showModal" :title="editing ? 'Edit staff' : 'Add staff'">
     <div class="space-y-3">
       <div class="grid grid-cols-2 gap-3">
         <Field label="First name" :error="errors.first_name">
@@ -82,11 +107,14 @@ async function addStaff() {
       <Field label="Email" :error="errors.email">
         <input v-model="form.email" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm" />
       </Field>
-      <p class="text-[12px] text-slate-400">Staff number is assigned automatically from the number sequence.</p>
+      <label v-if="editing" class="flex items-center gap-2 text-[13px] text-slate-600">
+        <input v-model="form.is_active" type="checkbox" class="rounded border-slate-300 text-primary" /> Active
+      </label>
+      <p v-if="!editing" class="text-[12px] text-slate-400">Staff number is assigned automatically from the number sequence.</p>
     </div>
     <template #footer>
-      <button class="px-4 h-9 text-[13px] font-medium rounded-lg text-slate-600 hover:bg-slate-100" @click="showAdd = false">Cancel</button>
-      <button class="px-4 h-9 text-[13px] font-medium rounded-lg bg-primary text-white" @click="addStaff">Save staff</button>
+      <button class="px-4 h-9 text-[13px] font-medium rounded-lg text-slate-600 hover:bg-slate-100" @click="showModal = false">Cancel</button>
+      <button class="px-4 h-9 text-[13px] font-medium rounded-lg bg-primary text-white" @click="save">{{ editing ? 'Save changes' : 'Save staff' }}</button>
     </template>
   </Modal>
 </template>

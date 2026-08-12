@@ -214,11 +214,15 @@ export async function seed(knex) {
   const students = {};
   for (const d of studentDefs) {
     const admissionNo = `ISS/2026/${String(admissionSeq++).padStart(4, '0')}`;
-    const [id] = await knex('students').insert({ school_id: schoolId, admission_no: admissionNo, first_name: d.first, last_name: d.last, sex: d.sex, boarding_type: d.boarding });
-    await knex('student_terms').insert({ student_id: id, term_id: secondTerm.id, class_id: d.class.id, status: 'active', intake_type: d.intake });
+    const [id] = await knex('students').insert({ school_id: schoolId, admission_no: admissionNo, first_name: d.first, last_name: d.last, sex: d.sex, state_of_origin: 'Lagos', country_of_origin: 'Nigeria' });
+    await knex('student_terms').insert({ student_id: id, term_id: secondTerm.id, class_id: d.class.id, status: 'active', intake_type: d.intake, boarding_type: d.boarding });
     await knex('student_guardians').insert({ student_id: id, name: `${d.sex === 'female' ? 'Mrs' : 'Mr'} ${d.last}`, relationship: d.sex === 'female' ? 'mother' : 'father', phone: '0803' + String(1000000 + id).slice(-7), is_primary: true });
     students[d.first] = id;
   }
+
+  // One withdrawn student, so the active/inactive/graduated/withdrawn filter has something to show.
+  const [withdrawnId] = await knex('students').insert({ school_id: schoolId, admission_no: `ISS/2026/${String(admissionSeq++).padStart(4, '0')}`, first_name: 'Musa', last_name: 'Balogun', sex: 'male', state_of_origin: 'Oyo', country_of_origin: 'Nigeria' });
+  await knex('student_terms').insert({ student_id: withdrawnId, term_id: secondTerm.id, class_id: jss1.id, status: 'withdrawn', intake_type: 'new', boarding_type: 'day' });
 
   // ---------------------------------------------------------------- Payments (mix of paid-up and defaulters)
   const receiptSeq = { n: 1 };

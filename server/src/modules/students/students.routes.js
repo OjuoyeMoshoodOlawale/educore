@@ -10,18 +10,30 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/', async (req, res) => {
-  const { classId, termId } = req.query;
-  let query = db('students as s')
-    .where('s.school_id', req.user.school_id)
-    .select('s.*');
+  const { classId, termId, status } = req.query;
 
-  if (classId && termId) {
+  // Always join in the CURRENT term's enrollment status/class — this is what lets the list
+  // show active/inactive/graduated/withdrawn, not just a bare student roster.
+  const currentTerm = await db('terms as t')
+    .join('sessions as s', 's.id', 't.session_id')
+    .where({ 's.school_id': req.user.school_id, 't.is_current': true })
+    .select('t.id')
+    .first();
+
+  let query = db('students as s').where('s.school_id', req.user.school_id);
+
+  const joinTermId = termId || currentTerm?.id;
+  if (joinTermId) {
     query = query
-      .join('student_terms as st', function () {
-        this.on('st.student_id', 's.id').andOn('st.term_id', db.raw('?', [termId]));
+      .leftJoin('student_terms as st', function () {
+        this.on('st.student_id', 's.id').andOn('st.term_id', db.raw('?', [joinTermId]));
       })
-      .where('st.class_id', classId)
-      .select('s.*', 'st.status', 'st.class_id');
+      .leftJoin('classes as c', 'c.id', 'st.class_id')
+      .select('s.*', 'st.status', 'st.boarding_type', 'c.id as class_id', 'c.name as class_name');
+    if (classId) query = query.where('st.class_id', classId);
+    if (status) query = query.where('st.status', status);
+  } else {
+    query = query.select('s.*');
   }
 
   const students = await query.orderBy('s.first_name');
@@ -32,7 +44,13 @@ router.get('/:id', async (req, res) => {
   const student = await db('students').where({ id: req.params.id, school_id: req.user.school_id }).first();
   if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
   const guardians = await db('student_guardians').where({ student_id: student.id });
-  res.json({ success: true, data: { ...student, guardians } });
+  const currentEnrollment = await db('student_terms as st')
+    .join('terms as t', 't.id', 'st.term_id')
+    .join('classes as c', 'c.id', 'st.class_id')
+    .where({ 'st.student_id': student.id, 't.is_current': true })
+    .select('st.status', 'st.boarding_type', 'st.intake_type', 'c.id as class_id', 'c.name as class_name')
+    .first();
+  res.json({ success: true, data: { ...student, guardians, currentEnrollment } });
 });
 
 const studentSchema = z.object({
@@ -44,6 +62,9 @@ const studentSchema = z.object({
   boarding_type: z.enum(['day', 'boarder']).optional(),
   address: z.string().optional(),
   occupation: z.string().optional(),
+  state_of_origin: z.string().optional(),
+  lga_of_origin: z.string().optional(),
+  country_of_origin: z.string().optional(),
   class_id: z.number().int().positive(),
   term_id: z.number().int().positive(),
   intake_type: z.enum(['new', 'returning']).optional(),
@@ -62,12 +83,12 @@ const studentSchema = z.object({
 
 // Admission number is always drawn from the school's configured sequence — never client-supplied.
 router.post('/', requireRole('admin', 'developer', 'bursar'), validate(studentSchema), async (req, res) => {
-  const { class_id, term_id, intake_type, guardians, ...profile } = req.validated;
+  const { class_id, term_id, intake_type, boarding_type, guardians, ...profile } = req.validated;
   const admissionNo = await nextInSequence(db, req.user.school_id, 'admission_no');
 
   const result = await db.transaction(async (trx) => {
     const [id] = await trx('students').insert({ school_id: req.user.school_id, admission_no: admissionNo, ...profile });
-    await trx('student_terms').insert({ student_id: id, term_id, class_id, intake_type: intake_type || 'new' });
+    await trx('student_terms').insert({ student_id: id, term_id, class_id, intake_type: intake_type || 'new', boarding_type: boarding_type || 'day' });
     if (guardians?.length) {
       await trx('student_guardians').insert(guardians.map((g) => ({ student_id: id, ...g })));
     }
@@ -78,8 +99,21 @@ router.post('/', requireRole('admin', 'developer', 'bursar'), validate(studentSc
 });
 
 router.put('/:id', requirePermission('students.edit'), validate(studentSchema.partial()), async (req, res) => {
-  const { class_id, term_id, intake_type, guardians, ...profile } = req.validated;
+  const { class_id, term_id, intake_type, boarding_type, guardians, ...profile } = req.validated;
   await db('students').where({ id: req.params.id }).update({ ...profile, updated_at: db.fn.now() });
+
+  // Boarding type is per-term — an edit updates whichever term is currently active for this school.
+  if (boarding_type) {
+    const currentTerm = await db('terms as t')
+      .join('sessions as s', 's.id', 't.session_id')
+      .where({ 's.school_id': req.user.school_id, 't.is_current': true })
+      .select('t.id')
+      .first();
+    if (currentTerm) {
+      await db('student_terms').where({ student_id: req.params.id, term_id: currentTerm.id }).update({ boarding_type, updated_at: db.fn.now() });
+    }
+  }
+
   res.json({ success: true, data: await db('students').where({ id: req.params.id }).first() });
 });
 

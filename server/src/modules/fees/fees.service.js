@@ -40,7 +40,7 @@ async function getEligibleChargesLive(trx, studentId, termId) {
   const eligible = structures.filter(
     (s) =>
       (s.applies_to_gender === 'all' || s.applies_to_gender === student.sex) &&
-      (s.applies_to_boarding_type === 'all' || s.applies_to_boarding_type === student.boarding_type) &&
+      (s.applies_to_boarding_type === 'all' || s.applies_to_boarding_type === enrollment.boarding_type) &&
       (s.applies_to_intake === 'all' || s.applies_to_intake === enrollment.intake_type)
   );
 
@@ -123,7 +123,7 @@ export async function generateClassBills(db, { classId, termId }) {
     const students = await trx('student_terms as st')
       .join('students as s', 's.id', 'st.student_id')
       .where({ 'st.class_id': classId, 'st.term_id': termId, 'st.status': 'active' })
-      .select('s.*', 'st.intake_type');
+      .select('s.*', 'st.intake_type', 'st.boarding_type');
 
     if (!students.length) return { generated: 0, skipped: 0, students: 0 };
 

@@ -81,8 +81,16 @@ function formatMoney(n) {
   <Spinner v-if="!student || !ledger" />
   <div v-else>
     <RouterLink to="/students" class="text-[13px] text-slate-500 hover:text-slate-700">&larr; Back to students</RouterLink>
-    <h2 class="text-xl font-medium text-slate-900 mt-2">{{ student.first_name }} {{ student.last_name }}</h2>
-    <p class="text-[13px] text-slate-500 mb-6">{{ student.admission_no }}</p>
+    <div class="flex items-start justify-between mt-2 mb-6">
+      <div>
+        <h2 class="text-xl font-medium text-slate-900">{{ student.first_name }} {{ student.last_name }}</h2>
+        <p class="text-[13px] text-slate-500">
+          {{ student.admission_no }}
+          <span v-if="student.currentEnrollment"> &middot; {{ student.currentEnrollment.class_name }} &middot; {{ student.currentEnrollment.boarding_type }} &middot; {{ student.currentEnrollment.status }}</span>
+        </p>
+      </div>
+      <RouterLink :to="`/students/${route.params.id}/edit`" class="h-9 px-3 flex items-center text-[13px] font-medium rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50">Edit profile</RouterLink>
+    </div>
 
     <div class="grid sm:grid-cols-3 gap-4 mb-6">
       <div class="bg-white border border-slate-200 rounded-xl p-4">

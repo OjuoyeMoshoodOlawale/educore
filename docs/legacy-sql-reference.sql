@@ -1,0 +1,206 @@
+-- ================================================================
+-- Legacy Portal SQL Reference (schportal_latest)
+-- ================================================================
+-- Raw SQL statements extracted directly from every result-related file in the
+-- legacy portal.islamicity.com.ng export, ordered by file from most SQL
+-- statements to fewest. This is the ground truth for how that system computed
+-- and generated report cards, broadsheets, promotion, and graduation.
+--
+-- RECOMMENDATIONS (cross-referenced against what EduCore already has):
+--
+-- 1. Ranking logic (studentportalreport.php, reportcard.php/2/3.php) — the
+--    RANK() OVER (...) window-function pattern repeated across all four files
+--    is exactly what EduCore's results.service.js::getClassRanking() already
+--    consolidates into ONE function, computed in JS rather than four
+--    near-duplicate SQL blocks. No further action needed — this is done.
+--
+-- 2. Cumulative average across terms (reportcard2.php in particular) — matches
+--    EduCore's getCumulativeAverage(), which walks backward through the
+--    session's terms and skips (not zeroes) any term the student has no
+--    record for. Done.
+--
+-- 3. promotion.php / movetoterm.php — append-only student_terms/staffstatus
+--    inserts, idempotency-checked before insert. EduCore's promotion.routes.js
+--    matches this exactly (verified idempotent in testing). Done.
+--
+-- 4. GRADUATION.php — a terminal status update, not a new row, distinct from
+--    promotion. EduCore's /promotion/graduate route matches this. Done.
+--
+-- 5. broadsheet.php — only 4 SQL statements here because most of the real
+--    logic is client-side table rendering, not SQL. The actual gap the user
+--    flagged is layout, not data: legacy broadsheet prints landscape, with a
+--    merged header cell per subject spanning CA/Exam/Total sub-columns, and
+--    checkboxes to toggle "totals only" vs "show all" columns. EduCore's
+--    current Broadsheet.vue is a flat table without this structure — this is
+--    the next concrete fix (see plan.md/addendum-v4.md §10.3 for the original
+--    design intent, not yet built to match).
+--
+-- 6. REPORT_BACKUP.php / keepreport.php / reportcard3.php — mostly redundant
+--    variants of reportcard.php with minor differences (this is the exact
+--    "four near-duplicate copies" problem plan.md called out from the start;
+--    EduCore deliberately has ONE report card implementation, not four).
+--
+-- ================================================================
+
+-- ================================================================
+-- Consolidated SQL reference — extracted directly from schportal_latest
+-- Ordered longest (most SQL statements) to shortest, per file.
+-- Generated for EduCore development reference.
+-- ================================================================
+
+
+-- ================================================================
+-- FILE: studentportalreport.php
+-- ================================================================
+-- 109:                           // $sql="SELECT DISTINCT studid from RESULT  ";
+-- 272:                                            <h4><i>Current Term Position: <?php  $sqlpc="Select * FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a where studid=$studentdetails ";
+-- 288:                                            $sqlp="Select * FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a where studid=$studentdetails ";}
+-- 290:                                              $sqlp="select * from (Select a.studid,a.d,b.d as 2nd, if(((a.d+b.d)/2) is null,a.d,b.d) as second,rank() over( order by second desc)as rank FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='second term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='first term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)b on a.studid=b.studid)term2 where studid=$studentdetails";
+-- 295:                                             $sqlp="Select * from(Select a.studid as studid,  (if(b.d is not null and c.d is not null,((a.d+b.d+c.d)/3),if(b.d is null and c.d is not null,(c.d+a.d)/2,if(b.d is not null and c.d is null,((b.d+a.d)/2),a.d))))as third,rank() over( order by third desc)as rank FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='third term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='second term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)b on a.studid=b.studid left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='sessionname' and result.termname='first term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)c on a.studid=c.studid)final where studid=$studentdetails";
+-- 343:                                        $sqlzz = "SELECT * FROM result where studid=".$studentdetails." and termname='$termname' and sessionname='$sessionname' and (exam+ca1+ca2)>0";
+-- 364:                                 $sqlzz1 = "SELECT * FROM result where studid=".$studentdetails." and termname='FIRST TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 368:                                 $sqlzz2 = "SELECT * FROM result where studid=".$studentdetails." and termname='SECOND TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"])."'";
+-- 372:                                    $sqlzz3 = "SELECT * FROM result where studid=".$studentdetails." and termname='THIRD TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"])."'";
+-- 378:                                  $sqlobtain = "SELECT * FROM subjectlist where  subjectname='".str_replace("'","''",$rowzz["subject"])."'";
+-- 387:                                    //SELECT *,  ((a.ca1+b.ca1+a.ca2+b.ca2+a.exam+b.exam)/2) as fs FROM result a left join result b on a.studid=b.studid where a.sessionname='$sessionname' and b.sessionname='2020/2021' and a.termname='second term' and b.subject=a.subject
+-- 429:                         $sqlremark="SELECT * from gradelist";
+-- 446:                        $sqlr="Select * FROM (SELECT result.*,(ca1+ca2+exam) as total, rank() over( order by total desc)as rank, currentclass from result left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and subject='".str_replace("'","''",$rowzz["subject"])."' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname)a where studid=$studentdetails";
+-- 449:                       // $sqlr="Select * FROM (SELECT studid, rank() over( order by exam desc)as rank from result)a  ";
+-- 484:                        <td><?php $sql1 = "SELECT  * FROM gradelist";
+-- 566:                                        $sql = "SELECT * FROM psychomotor_affective where ratingtype='psychomotor' and sessionname='$sessionname' and termname='$termname' and studid=".$studentdetails."";
+-- 591:                                                 <H4><u>GRADE KEY: </u></H4><h6> <?php $sql = "SELECT * FROM otherratingkey";
+-- 625:                                                $sql = "SELECT * FROM psychomotor_affective where ratingtype='affective' and termname='$termname' and sessionname='$sessionname' and studid='".$studentdetails."'";
+-- 657:                                                $sql = "SELECT * FROM gradelist order by ratingkey ";
+
+-- ================================================================
+-- FILE: reportcard2.php
+-- ================================================================
+-- 104:                           // $sql="SELECT DISTINCT studid from RESULT  ";
+-- 197:                                            <h5 hidden><i>Current Term Position: <?php  $sqlpc="Select * FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a where studid=$studentdetails ";
+-- 213:                                            $sqlp="Select * FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a where studid=$studentdetails ";}
+-- 215:                                              $sqlp="select * from (Select a.studid,a.d,b.d as 2nd, if(((a.d+b.d)/2) is null,a.d,b.d) as second,rank() over( order by second desc)as rank FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='second term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='first term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)b on a.studid=b.studid)term2 where studid=$studentdetails";
+-- 220:                                             $sqlp="Select * from(Select a.studid as studid,  (if(b.d is not null and c.d is not null,((a.d+b.d+c.d)/3),if(b.d is null and c.d is not null,(c.d+a.d)/2,if(b.d is not null and c.d is null,((b.d+a.d)/2),a.d))))as third,rank() over( order by third desc)as rank FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='third term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='second term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)b on a.studid=b.studid left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='sessionname' and result.termname='first term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)c on a.studid=c.studid)final where studid=$studentdetails";
+-- 266:                                        $sqlzz = "SELECT * FROM result where studid=".$studentdetails." and termname='$termname' and sessionname='$sessionname' and (exam+ca1+ca2)>0";
+-- 291:                                 $sqlzz1 = "SELECT * FROM result where studid=".$studentdetails." and termname='FIRST TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 296:                                 $sqlzz2 = "SELECT * FROM result where studid=".$studentdetails." and termname='SECOND TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 300:                                    $sqlzz3 = "SELECT * FROM result where studid=".$studentdetails." and termname='THIRD TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 306:                                  $sqlobtain = " SELECT * FROM subjectlist a left join classlist b on a.schsection=b.schsection where  a.subjectname='".str_replace("'","''",$s["subjectname"]) ."' and classid='$ID'";
+-- 315:                         $sqlremark="SELECT * from gradelist";
+-- 332:                        $sqlr="Select * FROM (SELECT result.*,(ca1+ca2+exam) as total, rank() over( order by total desc)as rank, currentclass from result left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and subject='".str_replace("'","''",$rowzz["subject"]) ."' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname)a where studid=$studentdetails";
+-- 363:                          <?php $sql1 = "SELECT  * FROM gradelist";
+-- 383:                                    <td><?php $sql1 = "SELECT  * FROM gradelist";
+-- 450:                                        $sql = "SELECT * FROM psychomotor_affective where ratingtype='psychomotor' and sessionname='$sessionname' and termname='$termname' and studid=".$studentdetails."";
+-- 475:                                                 <h5><u>GRADE KEY: </u></h5><h6> <?php $sql = "SELECT * FROM otherratingkey";
+-- 509:                                                $sql = "SELECT * FROM psychomotor_affective where ratingtype='affective' and termname='$termname' and sessionname='$sessionname' and studid='".$studentdetails."'";
+-- 541:                                                $sql = "SELECT * FROM gradelist order by ratingkey ";
+
+-- ================================================================
+-- FILE: reportcard.php
+-- ================================================================
+-- 110:                           // $sql="SELECT DISTINCT studid from RESULT  ";
+-- 253:                                            <h4><i>Current Term Position: <?php  $sqlpc="Select * FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a where studid=$studentdetails ";
+-- 269:                                            $sqlp="Select * FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a where studid=$studentdetails ";}
+-- 271:                                              $sqlp="select * from (Select a.studid,a.d,b.d as 2nd, if(((a.d+b.d)/2) is null,a.d,b.d) as second,rank() over( order by second desc)as rank FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='second term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='first term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)b on a.studid=b.studid)term2 where studid=$studentdetails";
+-- 276:                                             $sqlp="Select * from(Select a.studid as studid,  (if(b.d is not null and c.d is not null,((a.d+b.d+c.d)/3),if(b.d is null and c.d is not null,(c.d+a.d)/2,if(b.d is not null and c.d is null,((b.d+a.d)/2),a.d))))as third,rank() over( order by third desc)as rank FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='third term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='second term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)b on a.studid=b.studid left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='sessionname' and result.termname='first term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)c on a.studid=c.studid)final where studid=$studentdetails";
+-- 324:                                        $sqlzz = "SELECT * FROM result where studid=".$studentdetails." and termname='$termname' and sessionname='$sessionname' and (exam+ca1+ca2)>0";
+-- 349:                                 $sqlzz1 = "SELECT * FROM result where studid=".$studentdetails." and termname='FIRST TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 354:                                 $sqlzz2 = "SELECT * FROM result where studid=".$studentdetails." and termname='SECOND TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 358:                                    $sqlzz3 = "SELECT * FROM result where studid=".$studentdetails." and termname='THIRD TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 364:                                  $sqlobtain = " SELECT * FROM subjectlist a left join classlist b on a.schsection=b.schsection where  a.subjectname='".str_replace("'","''",$s["subjectname"]) ."' and classid='$ID'";
+-- 376:                                    //SELECT *,  ((a.ca1+b.ca1+a.ca2+b.ca2+a.exam+b.exam)/2) as fs FROM result a left join result b on a.studid=b.studid where a.sessionname='$sessionname' and b.sessionname='2020/2021' and a.termname='second term' and b.subject=a.subject
+-- 418:                         $sqlremark="SELECT * from gradelist";
+-- 435:                        $sqlr="Select * FROM (SELECT result.*,(ca1+ca2+exam) as total, rank() over( order by total desc)as rank, currentclass from result left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and subject='".str_replace("'","''",$rowzz["subject"]) ."' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname)a where studid=$studentdetails";
+-- 471:                        <td><?php $sql1 = "SELECT  * FROM gradelist";
+-- 555:                                        $sql = "SELECT * FROM psychomotor_affective where ratingtype='psychomotor' and sessionname='$sessionname' and termname='$termname' and studid=".$studentdetails."";
+-- 580:                                                 <H4><u>GRADE KEY: </u></H4><h6> <?php $sql = "SELECT * FROM otherratingkey";
+-- 614:                                                $sql = "SELECT * FROM psychomotor_affective where ratingtype='affective' and termname='$termname' and sessionname='$sessionname' and studid='".$studentdetails."'";
+-- 646:                                                $sql = "SELECT * FROM gradelist order by ratingkey ";
+
+-- ================================================================
+-- FILE: reportcard3.php
+-- ================================================================
+-- 182:                       // $sql="SELECT DISTINCT studid from RESULT  ";
+-- 271:                                    $sqlzz = "SELECT * FROM result where studid=".$studentdetails." and termname='$termname' and sessionname='$sessionname' and (exam+ca1+ca2)>0";
+-- 291:                             $sqlzz1 = "SELECT * FROM result where studid=".$studentdetails." and termname='FIRST TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 296:                             $sqlzz2 = "SELECT * FROM result where studid=".$studentdetails." and termname='SECOND TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 300:                                $sqlzz3 = "SELECT * FROM result where studid=".$studentdetails." and termname='THIRD TERM' and sessionname='$sessionname' and subject='".str_replace("'","''",$rowzz["subject"]) ."'";
+-- 306:                              $sqlobtain = " SELECT * FROM subjectlist a left join classlist b on a.schsection=b.schsection where  a.subjectname='".str_replace("'","''",$s["subjectname"]) ."' and classid='$ID'";
+-- 315:                     $sqlremark="SELECT * from gradelist";
+-- 351:                      <?php $sql1 = "SELECT  * FROM gradelist";
+-- 371:                                <td><?php $sql1 = "SELECT  * FROM gradelist";
+-- 411:             $sqlpc="SELECT * FROM (SELECT result.studid, AVG(ca1) AS a, AVG(ca2) AS b, AVG(exam) AS c, AVG(ca1) + AVG(ca2) + AVG(exam) AS d, RANK() OVER (ORDER BY AVG(ca1) + AVG(ca2) + AVG(exam) DESC) AS `rank` FROM `result` LEFT JOIN studentstatus ON result.studid = studentstatus.studid WHERE result.sessionname = '$sessionname' AND result.termname = '$termname' AND result.sessionname = studentstatus.sessionname AND result.termname = studentstatus.termname AND currentclass = '".$studentstatus['currentclass']."' AND status = 'active' GROUP BY studentstatus.studid) a WHERE studid = $studentdetails
+-- 414:             // $sqlpc="Select * FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='".$studentstatus['currentclass']."' and status='active' group by studentstatus.studid)a where studid=$studentdetails ";
+-- 460:                                    $sql = "SELECT * FROM psychomotor_affective where ratingtype='psychomotor' and sessionname='$sessionname' and termname='$termname' and studid=".$studentdetails."";
+-- 496:                                    $sql = "SELECT * FROM psychomotor_affective where ratingtype='affective' and sessionname='$sessionname' and termname='$termname' and studid=".$studentdetails."";
+-- 526:                                            $sql = "SELECT * FROM gradelist order by ratingkey ";
+-- 553:                <?php $sql = "SELECT * FROM otherratingkey";
+
+-- ================================================================
+-- FILE: keepreport.php
+-- ================================================================
+-- 69:                                             $sql1 = "SELECT  DISTINCT sessionname FROM session_term";
+-- 97:                                             $sql1 = "SELECT  DISTINCT schsections FROM schsection ORDER by ranking";
+-- 129:                                             $sql1 = "SELECT * FROM studentstatus  where currentclass='SSS 3'  and sessionname='2020/2021' and termname='first term'";
+-- 345:                                        $sqlzz = "SELECT * FROM result where studid=$studentn and termname='first Term' and sessionname='2020/2021'";
+-- 347:                                     $sqlzz2 = "SELECT * FROM result where studid=$studentn and termname='Second Term' and sessionname='2020/2021'";
+-- 352:                                    $sqlzz3 = "SELECT * , over( order by exam desc) as rank FROM result where studid=$studentn and termname='third Term' and sessionname='2020/2021'";
+-- 367:                                  $sqlobtain = "SELECT * FROM subjectlist where  subjectname='".str_replace("'","''",$rowzz["subject"])."'";
+-- 381:                         $sqlremark="SELECT * from gradelist";
+-- 401:                        $sqlr="Select * from in  (SELECT studid, rank() over( order by exam desc) as FROM `result` where sessionname='2020/2021' and termname='first term' and subject='".$rowzz["subject"]."') ";
+-- 417:                        <th><?php $sql1 = "SELECT  * FROM gradelist";
+-- 485:                                        $sql = "SELECT * FROM psychomotor_affective where ratingtype='psychomotor' and sessionname='2020/2021' and termname='first term'";
+-- 510:                                                 <H4><u>GRADE KEY: </u></H4><h6> <?php $sql = "SELECT * FROM otherratingkey";
+-- 544:                                                $sql = "SELECT * FROM psychomotor_affective where ratingtype='affective' and termname='first term' and sessionname='2020/2021' and studid='$studentn'";
+-- 576:                                                $sql = "SELECT * FROM gradelist order by ratingkey ";
+
+-- ================================================================
+-- FILE: movetoterm.php
+-- ================================================================
+-- 29:    $sqlgetstud = "SELECT * from studentstatus WHERE status='active' and sessionname='$oldsessionname' and termname='$oldtermname' ";
+-- 33:    $sqlcheck = "SELECT * from studentstatus WHERE  sessionname='$newsessionname' and termname='$newtermname' and studid='".$row['studid']."' ";
+-- 41:    $sql = "INSERT INTO studentstatus (studid,sessionname, termname, currentclass, status,new) VALUES('".$row['studid']."','".$newsessionname."','".$newtermname."','".$row['currentclass']."','".$row['status']."','returning');";
+-- 54:   $sqlgetstud2 = "SELECT * from staffstatus WHERE status='active' and sessionname='$oldsessionname' and termname='$oldtermname' ";
+-- 58:    $sqlcheck2 = "SELECT * from staffstatus WHERE  sessionname='$newsessionname' and termname='$newtermname' and staffID='".$row2['staffID']."'";
+-- 65:    $sql2 = "INSERT INTO staffstatus (staffID,sessionname, termname, status,classhead, sectionhead) VALUES('".$row2['staffID']."','".$newsessionname."','".$newtermname."','".$row2['status']."','".$row2['classhead']."','".$row2['sectionhead']."');";
+-- 166:                                            <?php   $sql1 = "SELECT  DISTINCT sessionname FROM session_term";
+-- 194:                                            <?php   $sql1 = "SELECT  DISTINCT sessionname FROM session_term";
+
+-- ================================================================
+-- FILE: promotion.php
+-- ================================================================
+-- 33:                            $sqlgetstud = "SELECT * from studentstatus WHERE status='active' and sessionname='$oldsessionname' and termname='$oldtermname' and studid='$studid' and currentclass='$oldclass'  ";
+-- 39:                            $sqlcheck = "SELECT * from studentstatus WHERE  sessionname='$newsessionname' and termname='$newtermname' and studid='".$row['studid']."' ";
+-- 47:                            $sql = "INSERT INTO studentstatus (studid,sessionname, termname, currentclass, status,new) VALUES('".$row['studid']."','".$newsessionname."','".$newtermname."','$currentclass','".$row['status']."','returning')";
+-- 149:                    $query = "SELECT * FROM studentprofile left join studentstatus on studentprofile.studid=studentstatus.studid where currentclass='$oldclass' and  sessionname='$oldsessionname' and termname='$oldtermname'";
+-- 199:                                            <?php   $sql1 = "SELECT  DISTINCT sessionname FROM session_term";
+-- 226:                                             <?php   $sql1 = "SELECT * FROM schsection";
+-- 241:                                             <?php   $sql1 = "SELECT * FROM classlist";
+
+-- ================================================================
+-- FILE: promotion_copy.php
+-- ================================================================
+-- 26://SELECT `classname` from classlist WHERE classid=((Select classid FROM classlist where classname=(SELECT DISTINCt classname from `2020_2021_first_term_promote` where classname='BASIC 5'))+1)
+-- 40:    $sql = "INSERT INTO ". "`". $new ."`" . " SELECT * from "." `". $old ."`"." WHERE status='active' ";
+-- 41:   $sqlc= "UPDATE studentprofile set sessionname='" .$newsessionname. "', termname='" . $newtermname ."' WHERE termname='" . $oldtermname. "' AND sessionname='".$oldsessionname."'";
+-- 115:    $sql = "SELECT * FROM studentstatus where currentclass='sss 3' and  sessionname='2020/2021' and termname='first term'";
+-- 138:    $sqll = "SELECT * FROM result where studid=".$row['studid']." and termname='first term' and sessionname='2020/2021'";
+
+-- ================================================================
+-- FILE: broadsheet.php
+-- ================================================================
+-- 241:                                            $sqlp="Select * FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='$termname' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='$c' and status='active' group by studentstatus.studid)a where studid=$studentdetails ";
+-- 247:                                              $sqlp="select * from (Select a.studid,a.d,b.d as 2nd, if(((a.d+b.d)/2) is null,a.d,b.d) as second,rank() over( order by second desc)as rank FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='second term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='$c' and status='active' group by studentstatus.studid)a left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='first term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='$c' and status='active' group by studentstatus.studid)b on a.studid=b.studid)term2 where studid=$studentdetails";
+-- 252:                                             $sqlp="Select * from(Select a.studid as studid,  (if(b.d is not null and c.d is not null,((a.d+b.d+c.d)/3),if(b.d is null and c.d is not null,(c.d+a.d)/2,if(b.d is not null and c.d is null,((b.d+a.d)/2),a.d))))as third,rank() over( order by third desc)as rank FROM (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='third term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='$c' and status='active' group by studentstatus.studid)a left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='$sessionname' and result.termname='second term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='$c' and status='active' group by studentstatus.studid)b on a.studid=b.studid left outer join (SELECT result.studid, avg(ca1) as a,avg(ca2) as b,avg(exam)as c,avg(ca1)+avg(ca2)+avg(exam) as d,rank() over( order by d desc)as rank FROM `result` left join studentstatus on result.studid=studentstatus.studid where result.sessionname='sessionname' and result.termname='first term' and result.sessionname=studentstatus.sessionname and result.termname=studentstatus.termname and currentclass='$c' and status='active' group by studentstatus.studid)c on a.studid=c.studid)final where studid=$studentdetails";
+-- 262:                                        <td><?php  $sql1 = "SELECT  * FROM gradelist";
+
+-- ================================================================
+-- FILE: REPORT_BACKUP.php
+-- ================================================================
+-- 71:                                             $sql1 = "SELECT  DISTINCT sessionname FROM session_term";
+-- 99:                                             $sql1 = "SELECT  DISTINCT schsections FROM schsection ORDER by ranking";
+
+-- ================================================================
+-- FILE: GRADUATION.php
+-- ================================================================
+-- 31:                            $sqlgetstud = "SELECT * from studentstatus WHERE status='active' and sessionname='$oldsessionname' and termname='$oldtermname' and studid='$studid' and currentclass='$oldclass'  ";
+-- 136:                    $query = "SELECT * FROM studentprofile left join studentstatus on studentprofile.studid=studentstatus.studid where currentclass='$oldclass' and  sessionname='$oldsessionname' and termname='$oldtermname'";

@@ -19,6 +19,7 @@ const routes = [
   { path: '/staff/allocation', name: 'allocation', component: () => import('../views/staff/Allocation.vue'), meta: { requiresAuth: true } },
   { path: '/students', name: 'student-list', component: () => import('../views/students/StudentList.vue'), meta: { requiresAuth: true } },
   { path: '/students/new', name: 'student-form', component: () => import('../views/students/StudentForm.vue'), meta: { requiresAuth: true } },
+  { path: '/students/:id/edit', name: 'student-edit', component: () => import('../views/students/StudentForm.vue'), meta: { requiresAuth: true } },
   { path: '/students/:id', name: 'student-profile', component: () => import('../views/students/StudentProfile.vue'), meta: { requiresAuth: true } },
   { path: '/fees/structure', name: 'fee-structure', component: () => import('../views/fees/FeeStructure.vue'), meta: { requiresAuth: true } },
   { path: '/fees/items', name: 'fee-items', component: () => import('../views/fees/FeeItems.vue'), meta: { requiresAuth: true } },
